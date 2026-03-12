@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_gold_returns_tree" model="ir.ui.view">
+        <field name="name">gold.returns.tree</field>
+        <field name="model">gold.returns</field>
+        <field name="arch" type="xml">
+            <tree string="Returns" decoration-info="state in ('submitted', 'approved')" decoration-success="state == 'completed'" decoration-danger="state == 'qc_failed'">
+                <field name="name"/>
+                <field name="order_id"/>
+                <field name="customer_id"/>
+                <field name="return_type"/>
+                <field name="reason"/>
+                <field name="initiation_date"/>
+                <field name="sla_deadline"/>
+                <field name="state" widget="badge" decoration-success="state == 'completed'" decoration-info="state == 'approved'"/>
+                <field name="final_refund_amount"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_gold_returns_form" model="ir.ui.view">
+        <field name="name">gold.returns.form</field>
+        <field name="model">gold.returns</field>
+        <field name="arch" type="xml">
+            <form string="Return Request">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved,received,qc_passed,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="RMA Number"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Request Details">
+                            <field name="order_id"/>
+                            <field name="customer_id"/>
+                            <field name="return_type"/>
+                            <field name="reason"/>
+                            <field name="initiation_date"/>
+                            <field name="sla_deadline"/>
+                        </group>
+                        <group string="Status">
+                            <field name="qc_status"/>
+                            <field name="refund_state"/>
+                            <field name="return_channel"/>
+                            <field name="return_store"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Items &amp; Reasons">
+                            <group>
+                                <group string="Returned Item">
+                                    <field name="returned_item_sku"/>
+                                    <field name="returned_item_name"/>
+                                    <field name="returned_quantity"/>
+                                </group>
+                                <group string="Reason &amp; Images">
+                                    <field name="reason_notes"/>
+                                    <field name="customer_images" widget="image"/>
+                                </group>
+                            </group>
+                            <group string="Exchange Details" invisible="return_type not in ['exchange_same', 'exchange_different', 'old_gold']">
+                                <group>
+                                    <field name="exchange_item_sku"/>
+                                    <field name="exchange_item_name"/>
+                                    <field name="exchange_price_diff"/>
+                                </group>
+                                <group string="Old Gold Exchange" invisible="return_type != 'old_gold'">
+                                    <field name="old_gold_weight"/>
+                                    <field name="old_gold_rate"/>
+                                    <field name="old_gold_value"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Logistics &amp; QC">
+                            <group>
+                                <group string="Return Shipping">
+                                    <field name="logistics_id"/>
+                                    <field name="return_awb"/>
+                                    <field name="return_pickup_date"/>
+                                    <field name="shipping_cost_by"/>
+                                </group>
+                                <group string="QC Assessment">
+                                    <field name="qc_done_by"/>
+                                    <field name="qc_notes"/>
+                                    <field name="inventory_restocked"/>
+                                    <field name="restock_location"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Refund &amp; Settlement">
+                            <group>
+                                <group string="Refund Calculation">
+                                    <field name="refund_type"/>
+                                    <field name="refund_amount"/>
+                                    <field name="shipping_deduction"/>
+                                    <field name="restocking_deduction"/>
+                                    <field name="final_refund_amount"/>
+                                </group>
+                                <group string="Refund Status">
+                                    <field name="refund_transaction_id"/>
+                                    <field name="refund_date"/>
+                                    <field name="approval_date"/>
+                                    <field name="completion_date"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_gold_returns_search" model="ir.ui.view">
+        <field name="name">gold.returns.search</field>
+        <field name="model">gold.returns</field>
+        <field name="arch" type="xml">
+            <search string="Search Returns">
+                <field name="name"/>
+                <field name="order_id"/>
+                <field name="customer_id"/>
+                <field name="state"/>
+                <field name="qc_status"/>
+                <filter name="pending_qc" string="Pending QC" domain="[('qc_status', '=', 'pending')]"/>
+                <filter name="pending_refund" string="Pending Refund" domain="[('refund_state', '=', 'pending')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_by_type" string="Return Type" context="{'group_by': 'return_type'}"/>
+                    <filter name="group_by_reason" string="Reason" context="{'group_by': 'reason'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_gold_returns" model="ir.actions.act_window">
+        <field name="name">Returns &amp; Exchanges</field>
+        <field name="res_model">gold.returns</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_gold_rtn_root" name="Returns" parent="menu_sales_management_root" sequence="80"/>
+    <menuitem id="menu_gold_returns" name="All Returns" parent="menu_gold_rtn_root" action="action_gold_returns" sequence="10"/>
+</odoo>

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_gold_customer_tree" model="ir.ui.view">
+        <field name="name">gold.customer.tree</field>
+        <field name="model">gold.customer</field>
+        <field name="arch" type="xml">
+            <tree string="Customers">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="mobile"/>
+                <field name="email"/>
+                <field name="segment" widget="badge" decoration-info="segment == 'regular'" decoration-warning="segment == 'gold'" decoration-success="segment == 'platinum'"/>
+                <field name="last_purchase_date"/>
+                <field name="total_purchase_value"/>
+                <field name="loyalty_points"/>
+                <field name="state" widget="badge" decoration-success="state == 'active'" decoration-danger="state == 'blacklisted'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_gold_customer_form" model="ir.ui.view">
+        <field name="name">gold.customer.form</field>
+        <field name="model">gold.customer</field>
+        <field name="arch" type="xml">
+            <form string="Customer">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="active,inactive,blacklisted"/>
+                </header>
+                <sheet>
+                    <field name="image" widget="image" class="oe_avatar" options='{"preview_image": "image"}'/>
+                    <div class="oe_title">
+                        <label for="name" string="Customer Name"/>
+                        <h1><field name="name" placeholder="E.g. John Doe"/></h1>
+                        <label for="code" string="Customer Code"/>
+                        <h2><field name="code" readonly="1"/></h2>
+                    </div>
+                    <group>
+                        <group string="Identity &amp; Contact">
+                            <field name="first_name"/>
+                            <field name="last_name"/>
+                            <field name="mobile"/>
+                            <field name="email"/>
+                            <field name="partner_id"/>
+                        </group>
+                        <group string="Segmentation">
+                            <field name="segment"/>
+                            <field name="category"/>
+                            <field name="preferred_store"/>
+                            <field name="type"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Profile Details">
+                            <group>
+                                <group string="Personal">
+                                    <field name="date_of_birth"/>
+                                    <field name="anniversary_date"/>
+                                    <field name="gender"/>
+                                    <field name="occupation"/>
+                                </group>
+                                <group string="Corporate">
+                                    <field name="company_name"/>
+                                    <field name="gst_number"/>
+                                    <field name="pan_number"/>
+                                    <field name="aadhaar_number"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Addresses">
+                            <group>
+                                <field name="shipping_address"/>
+                                <field name="billing_address"/>
+                            </group>
+                        </page>
+                        <page string="Preferences &amp; Analytics">
+                            <group>
+                                <group string="Preferences">
+                                    <field name="karat"/>
+                                    <field name="language"/>
+                                    <field name="comm_email"/>
+                                    <field name="comm_sms"/>
+                                    <field name="comm_whatsapp"/>
+                                </group>
+                                <group string="Analytics">
+                                    <field name="last_purchase_date"/>
+                                    <field name="total_purchase_value"/>
+                                    <field name="total_purchase_count"/>
+                                    <field name="avg_order_value"/>
+                                    <field name="clv"/>
+                                    <field name="loyalty_points"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Custom Fields">
+                            <group>
+                                <group>
+                                    <field name="custom_field_1"/>
+                                    <field name="custom_field_2"/>
+                                    <field name="custom_field_3"/>
+                                    <field name="custom_field_4"/>
+                                    <field name="custom_field_5"/>
+                                </group>
+                                <group>
+                                    <field name="custom_field_6"/>
+                                    <field name="custom_field_7"/>
+                                    <field name="custom_field_8"/>
+                                    <field name="custom_field_9"/>
+                                    <field name="custom_field_10"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_gold_customer_kanban" model="ir.ui.view">
+        <field name="name">gold.customer.kanban</field>
+        <field name="model">gold.customer</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="mobile"/>
+                <field name="email"/>
+                <field name="segment"/>
+                <field name="image"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_image">
+                                <field name="image" widget="image" class="oe_avatar"/>
+                            </div>
+                            <div class="o_kanban_record_top">
+                                <strong><field name="name"/></strong>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <div><field name="mobile"/></div>
+                                <div><field name="segment"/></div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_gold_customer_search" model="ir.ui.view">
+        <field name="name">gold.customer.search</field>
+        <field name="model">gold.customer</field>
+        <field name="arch" type="xml">
+            <search string="Search Customers">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="mobile"/>
+                <field name="email"/>
+                <field name="segment"/>
+                <field name="state"/>
+                <filter name="active_custs" string="Active" domain="[('state', '=', 'active')]"/>
+                <filter name="vip" string="VIP/Diamond" domain="[('segment', 'in', ['vip', 'diamond'])]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_segment" string="Segment" context="{'group_by': 'segment'}"/>
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_gold_customer" model="ir.actions.act_window">
+        <field name="name">Gold Customers</field>
+        <field name="res_model">gold.customer</field>
+        <field name="view_mode">tree,kanban,form</field>
+    </record>
+
+    <menuitem id="menu_gold_customer_root" name="Customers" parent="menu_sales_management_root" sequence="50"/>
+    <menuitem id="menu_gold_customer" name="All Customers" parent="menu_gold_customer_root" action="action_gold_customer" sequence="10"/>
+</odoo>

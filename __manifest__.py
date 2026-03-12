@@ -1,0 +1,22 @@
+{
+    'name': 'Sales Management App',
+    'version': '1.0',
+    'category': 'Operations',
+    'summary': 'All-in-one app: Inventory, Pricing, OMS, Customer, Promotions, Payment, Logistics, Returns',
+    'author': 'Your Company',
+    'depends': ['base'],
+    'data': [
+        'security/ir.model.access.csv',
+        'data/sample_data.xml',
+        'views/inv_views.xml',
+        'views/prc_views.xml',
+        'views/oms_views.xml',
+        'views/cust_views.xml',
+        'views/prm_views.xml',
+        'views/pay_views.xml',
+        'views/log_views.xml',
+        'views/rtn_views.xml',
+    ],
+    'installable': True,
+    'application': True,
+}

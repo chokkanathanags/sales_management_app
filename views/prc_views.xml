@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_gold_rate_tree" model="ir.ui.view">
+        <field name="name">gold.rate.tree</field>
+        <field name="model">gold.rate</field>
+        <field name="arch" type="xml">
+            <tree string="Gold Rates" decoration-muted="not active">
+                <field name="name"/>
+                <field name="metal_type"/>
+                <field name="karat"/>
+                <field name="price_per_gram"/>
+                <field name="price_per_10g"/>
+                <field name="purity_factor"/>
+                <field name="making_charge_pct"/>
+                <field name="wastage_pct"/>
+                <field name="gst_gold"/>
+                <field name="effective_date"/>
+                <field name="rate_source"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_gold_rate_form" model="ir.ui.view">
+        <field name="name">gold.rate.form</field>
+        <field name="model">gold.rate</field>
+        <field name="arch" type="xml">
+            <form string="Gold Rate">
+                <sheet>
+                    <group>
+                        <group string="Rate Details">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="metal_type"/>
+                            <field name="karat"/>
+                            <field name="purity_factor"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Rate">
+                            <field name="price_per_gram"/>
+                            <field name="price_per_10g"/>
+                            <field name="price_per_tola"/>
+                            <field name="rate_source"/>
+                            <field name="region"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Price Components">
+                            <field name="making_charge_fixed"/>
+                            <field name="making_charge_pct"/>
+                            <field name="wastage_pct"/>
+                            <field name="gst_gold"/>
+                            <field name="gst_making"/>
+                            <field name="gst_diamond"/>
+                        </group>
+                        <group string="Validity">
+                            <field name="effective_date"/>
+                            <field name="expiry_date"/>
+                            <field name="pricelist_id"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Description..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_gold_rate_search" model="ir.ui.view">
+        <field name="name">gold.rate.search</field>
+        <field name="model">gold.rate</field>
+        <field name="arch" type="xml">
+            <search string="Search Rates">
+                <field name="name"/>
+                <field name="karat"/>
+                <field name="metal_type"/>
+                <field name="rate_source"/>
+                <filter name="active_only" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="gold" string="Gold" domain="[('metal_type', '=', 'gold')]"/>
+                <filter name="silver" string="Silver" domain="[('metal_type', '=', 'silver')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_metal" string="Metal Type" context="{'group_by': 'metal_type'}"/>
+                    <filter name="group_by_karat" string="Karat" context="{'group_by': 'karat'}"/>
+                    <filter name="group_by_source" string="Rate Source" context="{'group_by': 'rate_source'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_gold_pricelist_tree" model="ir.ui.view">
+        <field name="name">gold.pricelist.tree</field>
+        <field name="model">gold.pricelist</field>
+        <field name="arch" type="xml">
+            <tree string="Price Lists">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="channel"/>
+                <field name="customer_segment"/>
+                <field name="priority"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_gold_pricelist_form" model="ir.ui.view">
+        <field name="name">gold.pricelist.form</field>
+        <field name="model">gold.pricelist</field>
+        <field name="arch" type="xml">
+            <form string="Price List">
+                <sheet>
+                    <group>
+                        <group string="Details">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="channel"/>
+                            <field name="priority"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Applicability">
+                            <field name="customer_segment"/>
+                            <field name="region"/>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                        </group>
+                    </group>
+                    <field name="rate_ids">
+                        <tree>
+                            <field name="name"/>
+                            <field name="metal_type"/>
+                            <field name="karat"/>
+                            <field name="price_per_gram"/>
+                            <field name="effective_date"/>
+                        </tree>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_gold_pricelist_search" model="ir.ui.view">
+        <field name="name">gold.pricelist.search</field>
+        <field name="model">gold.pricelist</field>
+        <field name="arch" type="xml">
+            <search string="Search Price Lists">
+                <field name="name"/>
+                <field name="channel"/>
+                <field name="customer_segment"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_channel" string="Channel" context="{'group_by': 'channel'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_gold_price_history_tree" model="ir.ui.view">
+        <field name="name">gold.price.history.tree</field>
+        <field name="model">gold.price.history</field>
+        <field name="arch" type="xml">
+            <tree string="Price History">
+                <field name="rate_id"/>
+                <field name="old_price"/>
+                <field name="new_price"/>
+                <field name="change_date"/>
+                <field name="changed_by"/>
+                <field name="approval_state" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_gold_price_history_search" model="ir.ui.view">
+        <field name="name">gold.price.history.search</field>
+        <field name="model">gold.price.history</field>
+        <field name="arch" type="xml">
+            <search string="Search Price History">
+                <field name="rate_id"/>
+                <field name="changed_by"/>
+                <field name="approval_state"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_rate" string="Rate" context="{'group_by': 'rate_id'}"/>
+                    <filter name="group_by_approval" string="Approval State" context="{'group_by': 'approval_state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_gold_rate" model="ir.actions.act_window">
+        <field name="name">Gold Pricing</field>
+        <field name="res_model">gold.rate</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_gold_pricelist" model="ir.actions.act_window">
+        <field name="name">Price Lists</field>
+        <field name="res_model">gold.pricelist</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_gold_price_history" model="ir.actions.act_window">
+        <field name="name">Price History</field>
+        <field name="res_model">gold.price.history</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <menuitem id="menu_gold_pricing_root" name="Pricing" parent="menu_sales_management_root" sequence="20"/>
+    <menuitem id="menu_gold_pricing" name="Gold Rates" parent="menu_gold_pricing_root" action="action_gold_rate" sequence="10"/>
+    <menuitem id="menu_gold_pricelist" name="Price Lists" parent="menu_gold_pricing_root" action="action_gold_pricelist" sequence="20"/>
+    <menuitem id="menu_gold_price_history" name="Price History" parent="menu_gold_pricing_root" action="action_gold_price_history" sequence="30"/>
+</odoo>

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_gold_promotions_tree" model="ir.ui.view">
+        <field name="name">gold.promotions.tree</field>
+        <field name="model">gold.promotions</field>
+        <field name="arch" type="xml">
+            <tree string="Promotions" decoration-info="state == 'active'" decoration-muted="state == 'expired'">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="promotion_type"/>
+                <field name="discount_pct"/>
+                <field name="discount_amount"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="state" widget="badge" decoration-success="state == 'active'" decoration-info="state == 'pending_approval'"/>
+                <field name="total_discount_given"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_gold_promotions_form" model="ir.ui.view">
+        <field name="name">gold.promotions.form</field>
+        <field name="model">gold.promotions</field>
+        <field name="arch" type="xml">
+            <form string="Promotion">
+                <header>
+                    <button name="action_generate_coupons" string="Generate Coupons" type="object" class="oe_highlight" invisible="state != 'active'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,active,expired"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Promotion Name"/>
+                        <h1><field name="name" placeholder="E.g. Diwali Special 2024"/></h1>
+                        <label for="code" string="Promo Code"/>
+                        <h2><field name="code" placeholder="DIWALI2024"/></h2>
+                    </div>
+                    <group>
+                        <group string="Configuration">
+                            <field name="promotion_type"/>
+                            <field name="active"/>
+                            <field name="priority"/>
+                            <field name="can_stack"/>
+                        </group>
+                        <group string="Discount Values">
+                            <field name="discount_pct" invisible="promotion_type not in ['percentage', 'category', 'brand', 'bogo_pct', 'tiered']"/>
+                            <field name="discount_amount" invisible="promotion_type not in ['flat', 'cart']"/>
+                            <field name="buy_qty" invisible="promotion_type not in ['bogo', 'bogo_pct']"/>
+                            <field name="get_qty" invisible="promotion_type not in ['bogo', 'bogo_pct']"/>
+                            <field name="max_discount_cap"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Conditions">
+                            <field name="min_cart_value"/>
+                            <field name="applicable_category"/>
+                            <field name="applicable_channel"/>
+                            <field name="applicable_payment_method"/>
+                            <field name="customer_segment"/>
+                        </group>
+                        <group string="Validity &amp; Limits">
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="usage_limit_total"/>
+                            <field name="usage_limit_per_customer"/>
+                            <field name="times_used"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Items">
+                            <group>
+                                <field name="applicable_product_ids"/>
+                                <field name="exclusion_product_ids"/>
+                            </group>
+                        </page>
+                        <page string="Coupons">
+                            <field name="coupon_ids">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="max_uses"/>
+                                    <field name="times_used"/>
+                                    <field name="expiry_date"/>
+                                    <field name="state" widget="badge"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Analytics">
+                            <group>
+                                <field name="total_discount_given"/>
+                                <field name="total_orders"/>
+                                <field name="roi"/>
+                            </group>
+                        </page>
+                        <page string="Description">
+                            <field name="description"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_gold_promotions_kanban" model="ir.ui.view">
+        <field name="name">gold.promotions.kanban</field>
+        <field name="model">gold.promotions</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="promotion_type"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_record_top">
+                                <strong><field name="name"/></strong>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <div>Code: <field name="code"/></div>
+                                <div>Type: <field name="promotion_type"/></div>
+                                <div>State: <field name="state"/></div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_gold_promotions_search" model="ir.ui.view">
+        <field name="name">gold.promotions.search</field>
+        <field name="model">gold.promotions</field>
+        <field name="arch" type="xml">
+            <search string="Search Promotions">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="promotion_type"/>
+                <field name="state"/>
+                <filter name="active_promos" string="Active" domain="[('state', '=', 'active')]"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_type" string="Type" context="{'group_by': 'promotion_type'}"/>
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_gold_promotions" model="ir.actions.act_window">
+        <field name="name">Promotions &amp; Discounts</field>
+        <field name="res_model">gold.promotions</field>
+        <field name="view_mode">tree,kanban,form</field>
+    </record>
+
+    <menuitem id="menu_gold_prm_root" name="Promotions" parent="menu_sales_management_root" sequence="30"/>
+    <menuitem id="menu_gold_promotions" name="All Promotions" parent="menu_gold_prm_root" action="action_gold_promotions" sequence="10"/>
+</odoo>

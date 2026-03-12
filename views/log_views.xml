@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_gold_logistics_tree" model="ir.ui.view">
+        <field name="name">gold.logistics.tree</field>
+        <field name="model">gold.logistics</field>
+        <field name="arch" type="xml">
+            <tree string="Shipments" decoration-info="status in ('picked_up', 'in_transit')" decoration-success="status == 'delivered'" decoration-danger="status == 'delivery_failed'">
+                <field name="name"/>
+                <field name="order_id"/>
+                <field name="carrier"/>
+                <field name="awb_number"/>
+                <field name="dispatch_date"/>
+                <field name="estimated_delivery"/>
+                <field name="status" widget="badge" decoration-success="status == 'delivered'" decoration-info="status == 'in_transit'" decoration-danger="status == 'delivery_failed'"/>
+                <field name="pincode"/>
+                <field name="is_high_value"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_gold_logistics_form" model="ir.ui.view">
+        <field name="name">gold.logistics.form</field>
+        <field name="model">gold.logistics</field>
+        <field name="arch" type="xml">
+            <form string="Shipment">
+                <header>
+                    <field name="status" widget="statusbar" statusbar_visible="label_created,pickup_scheduled,picked_up,in_transit,delivered"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Tracking Number / AWB"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Carrier &amp; Service">
+                            <field name="order_id"/>
+                            <field name="carrier"/>
+                            <field name="awb_number"/>
+                            <field name="aggregator"/>
+                            <field name="delivery_type"/>
+                            <field name="shipment_type"/>
+                        </group>
+                        <group string="Status &amp; Timeline">
+                            <field name="dispatch_date"/>
+                            <field name="estimated_delivery"/>
+                            <field name="actual_delivery"/>
+                            <field name="pickup_date"/>
+                            <field name="state"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Weight &amp; Zones">
+                            <field name="shipping_weight"/>
+                            <field name="shipping_volume"/>
+                            <field name="shipping_rate"/>
+                            <field name="shipping_zone"/>
+                            <field name="is_remote_area"/>
+                        </group>
+                        <group string="High Value &amp; Security">
+                            <field name="is_high_value"/>
+                            <field name="insurance_required"/>
+                            <field name="insurance_amount"/>
+                            <field name="gps_tracking"/>
+                            <field name="tamper_proof"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Delivery &amp; Routing">
+                            <group>
+                                <group string="Addresses">
+                                    <field name="from_address"/>
+                                    <field name="to_address"/>
+                                    <field name="pincode"/>
+                                </group>
+                                <group string="Instructions">
+                                    <field name="delivery_instructions"/>
+                                    <field name="signature_required"/>
+                                    <field name="contactless"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Warehouse &amp; Packing">
+                            <group>
+                                <group string="Packing">
+                                    <field name="quality_check_done"/>
+                                    <field name="is_gift_wrapped"/>
+                                    <field name="packed_by"/>
+                                </group>
+                                <group string="Documentation">
+                                    <field name="has_jewelry_cert"/>
+                                    <field name="has_warranty_card"/>
+                                    <field name="has_care_instructions"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Returns &amp; RTO" invisible="status not in ['rto_initiated', 'rto_in_transit', 'rto_received']">
+                            <group>
+                                <field name="return_awb"/>
+                                <field name="return_shipment_id"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_gold_logistics_kanban" model="ir.ui.view">
+        <field name="name">gold.logistics.kanban</field>
+        <field name="model">gold.logistics</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="carrier"/>
+                <field name="status"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_record_top">
+                                <strong><field name="name"/></strong>
+                                <span class="float-right badge badge-primary"><field name="carrier"/></span>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <div>Status: <field name="status"/></div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_gold_logistics_search" model="ir.ui.view">
+        <field name="name">gold.logistics.search</field>
+        <field name="model">gold.logistics</field>
+        <field name="arch" type="xml">
+            <search string="Search Shipments">
+                <field name="name"/>
+                <field name="awb_number"/>
+                <field name="order_id"/>
+                <field name="carrier"/>
+                <field name="status"/>
+                <filter name="in_transit" string="In Transit" domain="[('status', '=', 'in_transit')]"/>
+                <filter name="delivered" string="Delivered" domain="[('status', '=', 'delivered')]"/>
+                <filter name="high_value" string="High Value" domain="[('is_high_value', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_carrier" string="Carrier" context="{'group_by': 'carrier'}"/>
+                    <filter name="group_by_status" string="Tracking Status" context="{'group_by': 'status'}"/>
+                    <filter name="group_by_type" string="Shipment Type" context="{'group_by': 'shipment_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_gold_logistics" model="ir.actions.act_window">
+        <field name="name">Logistics &amp; Tracking</field>
+        <field name="res_model">gold.logistics</field>
+        <field name="view_mode">tree,kanban,form</field>
+    </record>
+
+    <menuitem id="menu_gold_log_root" name="Logistics" parent="menu_sales_management_root" sequence="70"/>
+    <menuitem id="menu_gold_logistics" name="All Shipments" parent="menu_gold_log_root" action="action_gold_logistics" sequence="10"/>
+</odoo>

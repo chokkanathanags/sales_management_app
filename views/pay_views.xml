@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_gold_payment_tree" model="ir.ui.view">
+        <field name="name">gold.payment.tree</field>
+        <field name="model">gold.payment</field>
+        <field name="arch" type="xml">
+            <tree string="Payments" decoration-success="state == 'success'" decoration-danger="state == 'failed'" decoration-warning="state == 'pending'">
+                <field name="name"/>
+                <field name="payment_date"/>
+                <field name="order_id"/>
+                <field name="customer_id"/>
+                <field name="payment_method"/>
+                <field name="amount"/>
+                <field name="transaction_id"/>
+                <field name="state" widget="badge" decoration-success="state == 'success'" decoration-danger="state == 'failed'"/>
+                <field name="is_reconciled"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_gold_payment_form" model="ir.ui.view">
+        <field name="name">gold.payment.form</field>
+        <field name="model">gold.payment</field>
+        <field name="arch" type="xml">
+            <form string="Payment">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="initiated,pending,success,failed,refunded"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Payment Reference"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Transaction Details">
+                            <field name="order_id"/>
+                            <field name="customer_id"/>
+                            <field name="payment_date"/>
+                            <field name="payment_method"/>
+                            <field name="payment_gateway"/>
+                        </group>
+                        <group string="Amounts">
+                            <field name="amount"/>
+                            <field name="currency_name"/>
+                            <field name="gateway_charges"/>
+                            <field name="is_3ds_verified"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Gateway Info">
+                            <field name="transaction_id"/>
+                            <field name="gateway_order_id"/>
+                            <field name="attempt_count"/>
+                        </group>
+                        <group string="EMI &amp; Refunds" invisible="payment_method != 'emi_bank' and refund_amount == 0">
+                            <field name="emi_months"/>
+                            <field name="emi_provider"/>
+                            <field name="refund_amount"/>
+                            <field name="refund_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Reconciliation">
+                            <group>
+                                <field name="is_reconciled"/>
+                                <field name="reconciliation_date"/>
+                                <field name="settlement_date"/>
+                                <field name="settlement_file_ref"/>
+                                <field name="discrepancy_amount"/>
+                                <field name="discrepancy_notes"/>
+                            </group>
+                        </page>
+                        <page string="Gateway Response">
+                            <field name="gateway_response" readonly="1"/>
+                        </page>
+                        <page string="Refund Info" invisible="state not in ['refunded', 'partially_refunded']">
+                            <group>
+                                <field name="refund_method"/>
+                                <field name="refund_transaction_id"/>
+                                <field name="refund_reason"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_gold_payment_search" model="ir.ui.view">
+        <field name="name">gold.payment.search</field>
+        <field name="model">gold.payment</field>
+        <field name="arch" type="xml">
+            <search string="Search Payments">
+                <field name="name"/>
+                <field name="transaction_id"/>
+                <field name="order_id"/>
+                <field name="customer_id"/>
+                <field name="payment_method"/>
+                <field name="state"/>
+                <filter name="success" string="Success" domain="[('state', '=', 'success')]"/>
+                <filter name="failed" string="Failed" domain="[('state', '=', 'failed')]"/>
+                <filter name="not_reconciled" string="Not Reconciled" domain="[('is_reconciled', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_method" string="Payment Method" context="{'group_by': 'payment_method'}"/>
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_by_gateway" string="Gateway" context="{'group_by': 'payment_gateway'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_gold_payment" model="ir.actions.act_window">
+        <field name="name">Payments</field>
+        <field name="res_model">gold.payment</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_gold_pay_root" name="Payments" parent="menu_sales_management_root" sequence="60"/>
+    <menuitem id="menu_gold_payment" name="All Payments" parent="menu_gold_pay_root" action="action_gold_payment" sequence="10"/>
+</odoo>

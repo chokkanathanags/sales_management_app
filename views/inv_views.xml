@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_gold_inventory_tree" model="ir.ui.view">
+        <field name="name">gold.inventory.tree</field>
+        <field name="model">gold.inventory</field>
+        <field name="arch" type="xml">
+            <tree string="Inventory Items" decoration-danger="state == 'damaged'" decoration-warning="state == 'quality_check'">
+                <field name="name"/>
+                <field name="sku"/>
+                <field name="serial_number"/>
+                <field name="category"/>
+                <field name="type"/>
+                <field name="karat"/>
+                <field name="quantity"/>
+                <field name="qty_available"/>
+                <field name="qty_reserved"/>
+                <field name="store_location"/>
+                <field name="state" widget="badge" decoration-success="state == 'available'" decoration-warning="state == 'quality_check'" decoration-danger="state == 'damaged'"/>
+                <field name="total_value"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_gold_inventory_form" model="ir.ui.view">
+        <field name="name">gold.inventory.form</field>
+        <field name="model">gold.inventory</field>
+        <field name="arch" type="xml">
+            <form string="Inventory Item">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="available,reserved,in_transit,quality_check,damaged"/>
+                </header>
+                <sheet>
+                    <field name="image" widget="image" class="oe_avatar" options='{"preview_image": "image"}'/>
+                    <div class="oe_title">
+                        <label for="name" string="Item Reference"/>
+                        <h1><field name="name" placeholder="E.g. GOLD-RING-001"/></h1>
+                        <label for="sku" string="SKU"/>
+                        <h2><field name="sku" placeholder="SKU Code"/></h2>
+                    </div>
+                    <group>
+                        <group string="Identification">
+                            <field name="serial_number"/>
+                            <field name="barcode"/>
+                            <field name="rfid_tag"/>
+                            <field name="lot_number"/>
+                        </group>
+                        <group string="Classification">
+                            <field name="category"/>
+                            <field name="collection"/>
+                            <field name="type"/>
+                            <field name="karat"/>
+                            <field name="purity"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Physical Details">
+                            <field name="gross_weight"/>
+                            <field name="net_weight"/>
+                            <field name="stone_weight"/>
+                            <field name="manufacture_date"/>
+                        </group>
+                        <group string="Location">
+                            <field name="warehouse"/>
+                            <field name="store_location"/>
+                            <field name="bin_location"/>
+                            <field name="is_consignment"/>
+                            <field name="consignment_partner" invisible="is_consignment == False"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Stock Quantities">
+                            <field name="quantity"/>
+                            <field name="qty_available"/>
+                            <field name="qty_reserved"/>
+                            <field name="qty_in_transit"/>
+                            <field name="qty_on_order"/>
+                            <field name="qty_in_production"/>
+                            <field name="qty_damaged"/>
+                            <field name="qty_return_pool"/>
+                            <field name="safety_stock"/>
+                            <field name="low_stock_threshold"/>
+                        </group>
+                        <group string="Pricing">
+                            <field name="rate_id"/>
+                            <field name="making_charge"/>
+                            <field name="wastage"/>
+                            <field name="stone_cost"/>
+                            <field name="base_value"/>
+                            <field name="total_value"/>
+                            <field name="tax_amount"/>
+                            <field name="currency_name"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" placeholder="Add detailed description..."/>
+                            <field name="notes" placeholder="Internal notes..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_gold_inventory_kanban" model="ir.ui.view">
+        <field name="name">gold.inventory.kanban</field>
+        <field name="model">gold.inventory</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="sku"/>
+                <field name="quantity"/>
+                <field name="image"/>
+                <field name="karat"/>
+                <field name="state"/>
+                <field name="total_value"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_image">
+                                <field name="image" widget="image" class="oe_avatar"/>
+                            </div>
+                            <div class="o_kanban_record_top">
+                                <strong><field name="name"/></strong>
+                                <span class="o_kanban_record_headings"><field name="sku"/></span>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <div>Karat: <field name="karat"/></div>
+                                <div>Qty: <field name="quantity"/></div>
+                                <div>Status: <field name="state"/></div>
+                                <div>Value: <field name="total_value"/></div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_gold_inventory_search" model="ir.ui.view">
+        <field name="name">gold.inventory.search</field>
+        <field name="model">gold.inventory</field>
+        <field name="arch" type="xml">
+            <search string="Search Inventory">
+                <field name="name"/>
+                <field name="sku"/>
+                <field name="serial_number"/>
+                <field name="barcode"/>
+                <field name="rfid_tag"/>
+                <field name="category"/>
+                <field name="karat"/>
+                <field name="state"/>
+                <field name="store_location"/>
+                <field name="warehouse"/>
+                <filter name="available" string="Available" domain="[('state', '=', 'available')]"/>
+                <filter name="low_stock" string="Low Stock" domain="[('qty_available', '&lt;=', 'low_stock_threshold')]"/>
+                <filter name="damaged" string="Damaged" domain="[('state', '=', 'damaged')]"/>
+                <filter name="quality_check" string="QC Pending" domain="[('state', '=', 'quality_check')]"/>
+                <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="inactive" string="Inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_category" string="Category" context="{'group_by': 'category'}"/>
+                    <filter name="group_by_karat" string="Karat" context="{'group_by': 'karat'}"/>
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_by_warehouse" string="Warehouse" context="{'group_by': 'warehouse'}"/>
+                    <filter name="group_by_type" string="Type" context="{'group_by': 'type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_gold_inventory_transfer_tree" model="ir.ui.view">
+        <field name="name">gold.inventory.transfer.tree</field>
+        <field name="model">gold.inventory.transfer</field>
+        <field name="arch" type="xml">
+            <tree string="Transfers" decoration-info="state == 'in_transit'" decoration-success="state == 'done'">
+                <field name="name"/>
+                <field name="inventory_id"/>
+                <field name="from_location"/>
+                <field name="to_location"/>
+                <field name="quantity"/>
+                <field name="state" widget="badge"/>
+                <field name="transfer_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_gold_inventory_transfer_form" model="ir.ui.view">
+        <field name="name">gold.inventory.transfer.form</field>
+        <field name="model">gold.inventory.transfer</field>
+        <field name="arch" type="xml">
+            <form string="Stock Transfer">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,approved,in_transit,done"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Transfer Details">
+                            <field name="name"/>
+                            <field name="inventory_id"/>
+                            <field name="quantity"/>
+                        </group>
+                        <group string="Locations">
+                            <field name="from_location"/>
+                            <field name="to_location"/>
+                            <field name="transfer_date"/>
+                            <field name="estimated_arrival"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Approval">
+                            <field name="approved_by"/>
+                            <field name="cost"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="Notes..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_gold_inventory_transfer_search" model="ir.ui.view">
+        <field name="name">gold.inventory.transfer.search</field>
+        <field name="model">gold.inventory.transfer</field>
+        <field name="arch" type="xml">
+            <search string="Search Transfers">
+                <field name="name"/>
+                <field name="from_location"/>
+                <field name="to_location"/>
+                <field name="state"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_gold_inventory" model="ir.actions.act_window">
+        <field name="name">Inventory</field>
+        <field name="res_model">gold.inventory</field>
+        <field name="view_mode">kanban,tree,form</field>
+    </record>
+
+    <record id="action_gold_inventory_transfer" model="ir.actions.act_window">
+        <field name="name">Stock Transfers</field>
+        <field name="res_model">gold.inventory.transfer</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_sales_management_root" name="Sales Management App" sequence="10" web_icon="base,static/description/icon.png"/>
+    <menuitem id="menu_gold_inventory_root" name="Inventory" parent="menu_sales_management_root" sequence="10"/>
+    <menuitem id="menu_gold_inventory" name="Items" parent="menu_gold_inventory_root" action="action_gold_inventory" sequence="10"/>
+    <menuitem id="menu_gold_inventory_transfer" name="Stock Transfers" parent="menu_gold_inventory_root" action="action_gold_inventory_transfer" sequence="20"/>
+</odoo>
