@@ -1,16 +1,17 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 import re
 
 
 class GoldCustomer(models.Model):
     _name = 'gold.customer'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Gold Customer'
     _rec_name = 'name'
     _order = 'name'
 
     # Core Identity
-    name = fields.Char(string='Customer Name', required=True)
+    name = fields.Char(string='Customer Name', required=True, tracking=True)
     first_name = fields.Char(string='First Name')
     last_name = fields.Char(string='Last Name')
     partner_id = fields.Many2one('res.partner', string='Related Odoo Partner')
@@ -19,9 +20,9 @@ class GoldCustomer(models.Model):
     image = fields.Binary(string='Profile Photo')
 
     # Contact
-    mobile = fields.Char(string='Mobile (Primary)', required=True, index=True)
+    mobile = fields.Char(string='Mobile (Primary)', required=True, index=True, tracking=True)
     mobile_verified = fields.Boolean(string='Mobile OTP Verified')
-    email = fields.Char(string='Email', required=True, index=True)
+    email = fields.Char(string='Email', required=True, index=True, tracking=True)
     email_verified = fields.Boolean(string='Email Verified')
 
     # Personal Info
@@ -43,7 +44,7 @@ class GoldCustomer(models.Model):
     aadhaar_number = fields.Char(string='Aadhaar (Optional)')
     credit_limit = fields.Float(string='Credit Limit (Corporate)')
 
-    # Addresses (multi-address via text for simplicity; extend with One2many if needed)
+    # Addresses
     shipping_address = fields.Text(string='Default Shipping Address')
     billing_address = fields.Text(string='Default Billing Address')
     address_labels = fields.Text(string='Saved Addresses (JSON)')
@@ -69,14 +70,14 @@ class GoldCustomer(models.Model):
         ('wholesale', 'Wholesale'),
         ('employee', 'Employee'),
         ('influencer', 'Influencer'),
-    ], string='Customer Segment/Tier', default='regular')
+    ], string='Customer Segment/Tier', default='regular', required=True)
     auto_segment_rule = fields.Char(string='Auto-Segment Rule Applied')
 
     # Source & Acquisition
     customer_source = fields.Char(string='Customer Source')
     registration_date = fields.Datetime(string='Registration Date', default=fields.Datetime.now)
 
-    # Analytics (computed/updated from orders)
+    # Analytics
     last_purchase_date = fields.Date(string='Last Purchase Date')
     total_purchase_value = fields.Float(string='Lifetime Purchase Value')
     total_purchase_count = fields.Integer(string='Total Purchase Count')
@@ -92,24 +93,12 @@ class GoldCustomer(models.Model):
     consent_data_sharing = fields.Boolean(string='Data Sharing Consent', default=False)
     data_retention_policy = fields.Char(string='Data Retention Policy')
 
-    # Custom Fields
-    custom_field_1 = fields.Char(string='Custom Field 1')
-    custom_field_2 = fields.Char(string='Custom Field 2')
-    custom_field_3 = fields.Char(string='Custom Field 3')
-    custom_field_4 = fields.Char(string='Custom Field 4')
-    custom_field_5 = fields.Char(string='Custom Field 5')
-    custom_field_6 = fields.Char(string='Custom Field 6')
-    custom_field_7 = fields.Char(string='Custom Field 7')
-    custom_field_8 = fields.Char(string='Custom Field 8')
-    custom_field_9 = fields.Char(string='Custom Field 9')
-    custom_field_10 = fields.Char(string='Custom Field 10')
-
     # Status
     state = fields.Selection([
         ('active', 'Active'),
         ('inactive', 'Inactive'),
         ('blacklisted', 'Blacklisted'),
-    ], string='Status', default='active')
+    ], string='Status', default='active', tracking=True)
     code = fields.Char(string='Customer Code')
     description = fields.Text(string='Notes')
     category = fields.Char(string='Category')
@@ -120,22 +109,82 @@ class GoldCustomer(models.Model):
     currency_name = fields.Char(string='Currency', default='INR')
     type = fields.Char(string='Type')
 
+    # Smart Button Fields
+    payment_ids = fields.One2many('gold.payment', 'customer_id', string='Payments')
+    payment_count = fields.Integer(string='Payment Count', compute='_compute_payment_count')
+
+    def _compute_payment_count(self):
+        for rec in self:
+            rec.payment_count = len(rec.payment_ids)
+
+    # Validations
+    @api.constrains('name')
+    def _check_name_length(self):
+        for rec in self:
+            if rec.name and len(rec.name.strip()) < 3:
+                raise ValidationError(_("Customer name must be at least 3 characters long."))
+
     @api.constrains('email')
     def _check_email_format(self):
         for rec in self:
             if rec.email:
-                if not re.match(r"[^@]+@[^@]+\.[^@]+", rec.email):
-                    raise ValidationError("Please enter a valid email address (e.g., customer@example.com).")
+                if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", rec.email):
+                    raise ValidationError(_("Please enter a valid email address (e.g., customer@example.com)."))
+                
+                # Uniqueness check
+                duplicate = self.search([('email', '=', rec.email), ('id', '!=', rec.id)])
+                if duplicate:
+                    raise ValidationError(_("A customer with this email already exists."))
 
     @api.constrains('mobile')
     def _check_mobile_format(self):
         for rec in self:
             if rec.mobile:
-                if not rec.mobile.isdigit() or len(rec.mobile) < 10:
-                    raise ValidationError("Please enter a valid mobile number with at least 10 digits.")
+                if not re.match(r"^\+?[0-9]{10,15}$", rec.mobile):
+                    raise ValidationError(_("Please enter a valid mobile number (10-15 digits)."))
+                
+                # Uniqueness check
+                duplicate = self.search([('mobile', '=', rec.mobile), ('id', '!=', rec.id)])
+                if duplicate:
+                    raise ValidationError(_("A customer with this mobile number already exists."))
+
+    @api.constrains('gst_number')
+    def _check_gst_number(self):
+        for rec in self:
+            if rec.gst_number and not re.match(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$", rec.gst_number):
+                raise ValidationError(_("Invalid GST Number format."))
+
+    @api.constrains('pan_number')
+    def _check_pan_number(self):
+        for rec in self:
+            if rec.pan_number and not re.match(r"^[A-Z]{5}[0-9]{4}[A-Z]{1}$", rec.pan_number):
+                raise ValidationError(_("Invalid PAN Number format."))
+
+    @api.constrains('aadhaar_number')
+    def _check_aadhaar_number(self):
+        for rec in self:
+            if rec.aadhaar_number and not re.match(r"^[2-9]{1}[0-9]{3}\\s[0-9]{4}\\s[0-9]{4}$|^[2-9]{1}[0-9]{11}$", rec.aadhaar_number):
+                raise ValidationError(_("Invalid Aadhaar Number format (12 digits required)."))
 
     @api.constrains('date_of_birth')
     def _check_date_of_birth(self):
         for rec in self:
             if rec.date_of_birth and rec.date_of_birth > fields.Date.today():
-                raise ValidationError("Date of birth cannot be in the future.")
+                raise ValidationError(_("Date of birth cannot be in the future."))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('code', 'New') == 'New' or not vals.get('code'):
+                vals['code'] = self.env['ir.sequence'].next_by_code('gold.customer.seq') or 'New'
+        return super(GoldCustomer, self).create(vals_list)
+
+    def action_view_payments(self):
+        return {
+            'name': _('Payments'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'gold.payment',
+            'view_mode': 'tree,form',
+            'domain': [('customer_id', '=', self.id)],
+            'context': {'default_customer_id': self.id},
+        }

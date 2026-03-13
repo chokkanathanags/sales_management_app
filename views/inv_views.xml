@@ -122,9 +122,9 @@
                             </div>
                             <div class="o_kanban_record_top">
                                 <strong><field name="name"/></strong>
-                                <span class="o_kanban_record_headings"><field name="sku"/></span>
                             </div>
                             <div class="o_kanban_record_body">
+                                <div><field name="sku"/></div>
                                 <div>Karat: <field name="karat"/></div>
                                 <div>Qty: <field name="quantity"/></div>
                                 <div>Status: <field name="state"/></div>

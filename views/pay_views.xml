@@ -4,16 +4,15 @@
         <field name="name">gold.payment.tree</field>
         <field name="model">gold.payment</field>
         <field name="arch" type="xml">
-            <tree string="Payments" decoration-success="state == 'success'" decoration-danger="state == 'failed'" decoration-warning="state == 'pending'">
-                <field name="name"/>
-                <field name="payment_date"/>
-                <field name="order_id"/>
+            <tree string="Payments" decoration-success="state == 'success'" decoration-danger="state == 'failed'" decoration-warning="state in ('initiated', 'pending')" sample="1">
+                <field name="name" decoration-bf="1"/>
+                <field name="payment_date" widget="remaining_days" optional="show"/>
                 <field name="customer_id"/>
                 <field name="payment_method"/>
-                <field name="amount"/>
-                <field name="transaction_id"/>
-                <field name="state" widget="badge" decoration-success="state == 'success'" decoration-danger="state == 'failed'"/>
-                <field name="is_reconciled"/>
+                <field name="amount" widget="monetary" options="{'currency_field': 'currency_name'}" sum="Total Amount"/>
+                <field name="transaction_id" optional="hide"/>
+                <field name="state" widget="badge" decoration-success="state == 'success'" decoration-danger="state == 'failed'" decoration-warning="state in ('initiated', 'pending')" decoration-info="state == 'refunded'"/>
+                <field name="is_reconciled" widget="boolean_toggle"/>
             </tree>
         </field>
     </record>
@@ -24,65 +23,129 @@
         <field name="arch" type="xml">
             <form string="Payment">
                 <header>
-                    <field name="state" widget="statusbar" statusbar_visible="initiated,pending,success,failed,refunded"/>
+                    <field name="state" widget="statusbar" statusbar_visible="initiated,pending,success,failed,refunded" options="{'clickable': '1'}"/>
                 </header>
                 <sheet>
+                    <widget name="web_ribbon" title="Paid" bg_color="text-bg-success" invisible="state != 'success'"/>
+                    <widget name="web_ribbon" title="Failed" bg_color="text-bg-danger" invisible="state != 'failed'"/>
+                    <widget name="web_ribbon" title="Refunded" bg_color="text-bg-info" invisible="state != 'refunded'"/>
+
                     <div class="oe_title">
                         <label for="name" string="Payment Reference"/>
-                        <h1><field name="name" readonly="1"/></h1>
+                        <h1><field name="name" readonly="1" class="oe_inline"/></h1>
                     </div>
                     <group>
-                        <group string="Transaction Details">
-                            <field name="order_id"/>
-                            <field name="customer_id"/>
-                            <field name="payment_date"/>
-                            <field name="payment_method"/>
-                            <field name="payment_gateway"/>
+                        <group string="Transaction Information">
+                            <field name="customer_id" widget="many2one_avatar" placeholder="Select customer" required="1"/>
+                            <field name="order_id" placeholder="Select related order"/>
+                            <field name="payment_date" placeholder="Select Payment Date"/>
+                            <field name="payment_method" placeholder="Select Payment Method" required="1"/>
+                            <field name="payment_gateway" placeholder="Select Payment Gateway"/>
                         </group>
-                        <group string="Amounts">
-                            <field name="amount"/>
-                            <field name="currency_name"/>
-                            <field name="gateway_charges"/>
-                            <field name="is_3ds_verified"/>
+                        <group string="Financial Details">
+                            <label for="amount"/>
+                            <div class="o_row">
+                                <field name="amount" widget="monetary" options="{'currency_field': 'currency_name'}" placeholder="0.00" required="1"/>
+                                <field name="currency_name" readonly="1" class="oe_inline"/>
+                            </div>
+                            <field name="gateway_charges" widget="monetary" options="{'currency_field': 'currency_name'}" placeholder="0.00"/>
+                            <field name="is_3ds_verified" widget="boolean_toggle"/>
                         </group>
                     </group>
-                    <group>
-                        <group string="Gateway Info">
-                            <field name="transaction_id"/>
-                            <field name="gateway_order_id"/>
-                            <field name="attempt_count"/>
+                    <group string="Gateway Processing">
+                        <group>
+                            <field name="transaction_id" placeholder="Gateway Transaction ID"/>
+                            <field name="gateway_order_id" placeholder="Gateway Order ID"/>
                         </group>
-                        <group string="EMI &amp; Refunds" invisible="payment_method != 'emi_bank' and refund_amount == 0">
-                            <field name="emi_months"/>
-                            <field name="emi_provider"/>
-                            <field name="refund_amount"/>
-                            <field name="refund_date"/>
+                        <group>
+                            <field name="attempt_count"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Reconciliation">
+                        <page string="EMI Details" name="emi" invisible="payment_method != 'emi_bank'">
                             <group>
-                                <field name="is_reconciled"/>
-                                <field name="reconciliation_date"/>
-                                <field name="settlement_date"/>
-                                <field name="settlement_file_ref"/>
-                                <field name="discrepancy_amount"/>
-                                <field name="discrepancy_notes"/>
+                                <group>
+                                    <field name="emi_provider" placeholder="e.g. Bajaj Finserv"/>
+                                    <field name="emi_months"/>
+                                </group>
+                                <group>
+                                    <field name="emi_monthly_amount" widget="monetary" options="{'currency_field': 'currency_name'}"/>
+                                </group>
                             </group>
                         </page>
-                        <page string="Gateway Response">
-                            <field name="gateway_response" readonly="1"/>
-                        </page>
-                        <page string="Refund Info" invisible="state not in ['refunded', 'partially_refunded']">
+                        <page string="Reconciliation" name="reconciliation">
                             <group>
-                                <field name="refund_method"/>
-                                <field name="refund_transaction_id"/>
-                                <field name="refund_reason"/>
+                                <group>
+                                    <field name="is_reconciled" widget="boolean_toggle"/>
+                                    <field name="reconciliation_date"/>
+                                    <field name="settlement_date"/>
+                                </group>
+                                <group>
+                                    <field name="settlement_file_ref" placeholder="File reference..."/>
+                                    <field name="discrepancy_amount" widget="monetary" options="{'currency_field': 'currency_name'}"/>
+                                </group>
                             </group>
+                            <field name="discrepancy_notes" placeholder="Notes regarding reconciliation discrepancies..."/>
+                        </page>
+                        <page string="Gateway Response" name="gateway_response" groups="base.group_no_one">
+                            <field name="gateway_response" readonly="1" widget="ace" options="{'mode': 'json'}"/>
+                        </page>
+                        <page string="Refund Details" name="refund" invisible="state not in ('refunded', 'partially_refunded')">
+                            <group>
+                                <group>
+                                    <field name="refund_amount" widget="monetary" options="{'currency_field': 'currency_name'}"/>
+                                    <field name="refund_date"/>
+                                </group>
+                                <group>
+                                    <field name="refund_method"/>
+                                    <field name="refund_transaction_id"/>
+                                </group>
+                            </group>
+                            <field name="refund_reason" placeholder="Reason for refund..."/>
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
+        </field>
+    </record>
+
+    <record id="view_gold_payment_graph" model="ir.ui.view">
+        <field name="name">gold.payment.graph</field>
+        <field name="model">gold.payment</field>
+        <field name="arch" type="xml">
+            <graph string="Payments Analysis" type="bar" sample="1">
+                <field name="payment_method"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_gold_payment_pivot" model="ir.ui.view">
+        <field name="name">gold.payment.pivot</field>
+        <field name="model">gold.payment</field>
+        <field name="arch" type="xml">
+            <pivot string="Payments Analysis" sample="1">
+                <field name="payment_date" type="row"/>
+                <field name="payment_method" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_gold_payment_calendar" model="ir.ui.view">
+        <field name="name">gold.payment.calendar</field>
+        <field name="model">gold.payment</field>
+        <field name="arch" type="xml">
+            <calendar string="Payments" date_start="payment_date" color="state" mode="month">
+                <field name="customer_id"/>
+                <field name="amount" widget="monetary"/>
+                <field name="payment_method"/>
+            </calendar>
         </field>
     </record>
 
@@ -91,19 +154,26 @@
         <field name="model">gold.payment</field>
         <field name="arch" type="xml">
             <search string="Search Payments">
-                <field name="name"/>
+                <field name="name" string="Payment/Transaction" filter_domain="['|', ('name', 'ilike', self), ('transaction_id', 'ilike', self)]"/>
                 <field name="transaction_id"/>
                 <field name="order_id"/>
                 <field name="customer_id"/>
                 <field name="payment_method"/>
                 <field name="state"/>
-                <filter name="success" string="Success" domain="[('state', '=', 'success')]"/>
+                <separator/>
+                <filter name="success" string="Successful" domain="[('state', '=', 'success')]"/>
+                <filter name="pending" string="Pending/Initiated" domain="[('state', 'in', ('initiated', 'pending'))]"/>
                 <filter name="failed" string="Failed" domain="[('state', '=', 'failed')]"/>
-                <filter name="not_reconciled" string="Not Reconciled" domain="[('is_reconciled', '=', False)]"/>
+                <filter name="refunded" string="Refunded" domain="[('state', 'in', ('refunded', 'partially_refunded'))]"/>
+                <separator/>
+                <filter name="not_reconciled" string="To Reconcile" domain="[('is_reconciled', '=', False)]"/>
+                <filter name="today" string="Today" domain="[('payment_date', '&gt;=', datetime.datetime.now().strftime('%Y-%m-%d 00:00:00')), ('payment_date', '&lt;=', datetime.datetime.now().strftime('%Y-%m-%d 23:59:59'))]"/>
                 <group expand="0" string="Group By">
+                    <filter name="group_by_customer" string="Customer" context="{'group_by': 'customer_id'}"/>
                     <filter name="group_by_method" string="Payment Method" context="{'group_by': 'payment_method'}"/>
                     <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_by_gateway" string="Gateway" context="{'group_by': 'payment_gateway'}"/>
+                    <filter name="group_by_date" string="Date" context="{'group_by': 'payment_date:day'}"/>
                 </group>
             </search>
         </field>
@@ -112,7 +182,14 @@
     <record id="action_gold_payment" model="ir.actions.act_window">
         <field name="name">Payments</field>
         <field name="res_model">gold.payment</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">tree,kanban,graph,pivot,calendar,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register a new payment!
+            </p><p>
+                Manage customer payments, gateways, and reconciliation records.
+            </p>
+        </field>
     </record>
 
     <menuitem id="menu_gold_pay_root" name="Payments" parent="menu_sales_management_root" sequence="60"/>

@@ -3,13 +3,20 @@ from odoo import models, fields, api
 
 class GoldLogistics(models.Model):
     _name = 'gold.logistics'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Gold Logistics & Shipping'
     _rec_name = 'name'
     _order = 'dispatch_date desc'
 
-    name = fields.Char(string='Tracking Number / AWB', required=True, default='New', copy=False, index=True)
-    order_id = fields.Many2one('gold.purchase', string='Order')
+    name = fields.Char(string='Tracking / AWB', required=True, default='New', copy=False, index=True, tracking=True)
+    order_id = fields.Many2one('gold.purchase', string='Order', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
+
+    @api.model
+    def create(self, vals):
+        if vals.get('name', 'New') == 'New':
+            vals['name'] = self.env['ir.sequence'].next_by_code('gold.logistics.seq') or 'New'
+        return super(GoldLogistics, self).create(vals)
 
     # Carrier
     carrier = fields.Selection([

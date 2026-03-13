@@ -4,16 +4,16 @@
         <field name="name">gold.returns.tree</field>
         <field name="model">gold.returns</field>
         <field name="arch" type="xml">
-            <tree string="Returns" decoration-info="state in ('submitted', 'approved')" decoration-success="state == 'completed'" decoration-danger="state == 'qc_failed'">
-                <field name="name"/>
-                <field name="order_id"/>
-                <field name="customer_id"/>
-                <field name="return_type"/>
-                <field name="reason"/>
-                <field name="initiation_date"/>
-                <field name="sla_deadline"/>
-                <field name="state" widget="badge" decoration-success="state == 'completed'" decoration-info="state == 'approved'"/>
-                <field name="final_refund_amount"/>
+            <tree string="Returns" decoration-info="state in ('submitted', 'approved')" decoration-success="state == 'completed'" decoration-warning="state == 'received'" decoration-danger="state in ('qc_failed', 'cancelled')" sample="1">
+                <field name="name" decoration-bf="1"/>
+                <field name="order_id" widget="many2one_avatar"/>
+                <field name="customer_id" widget="many2one_avatar"/>
+                <field name="return_type" widget="badge" decoration-info="1"/>
+                <field name="reason" optional="show"/>
+                <field name="initiation_date" optional="show"/>
+                <field name="sla_deadline" widget="remaining_days"/>
+                <field name="state" widget="badge" decoration-success="state == 'completed'" decoration-info="state == 'approved'" decoration-warning="state == 'received'" decoration-muted="state == 'draft'" decoration-danger="state == 'cancelled'"/>
+                <field name="final_refund_amount" sum="Total Refunded" widget="monetary" options="{'currency_field': 'currency_name'}"/>
             </tree>
         </field>
     </record>
@@ -24,91 +24,181 @@
         <field name="arch" type="xml">
             <form string="Return Request">
                 <header>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved,received,qc_passed,completed"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved,received,qc_passed,completed" options="{'clickable': '1'}"/>
                 </header>
                 <sheet>
+                    <widget name="web_ribbon" title="Completed" bg_color="text-bg-success" invisible="state != 'completed'"/>
+                    <widget name="web_ribbon" title="QC Failed" bg_color="text-bg-danger" invisible="state != 'qc_failed'"/>
+                    <widget name="web_ribbon" title="Refunded" bg_color="text-bg-info" invisible="refund_state != 'processed'"/>
+
                     <div class="oe_title">
-                        <label for="name" string="RMA Number"/>
-                        <h1><field name="name" readonly="1"/></h1>
+                        <label for="name" string="RMA Reference"/>
+                        <h1><field name="name" readonly="1" class="oe_inline"/></h1>
                     </div>
                     <group>
-                        <group string="Request Details">
-                            <field name="order_id"/>
-                            <field name="customer_id"/>
-                            <field name="return_type"/>
-                            <field name="reason"/>
-                            <field name="initiation_date"/>
-                            <field name="sla_deadline"/>
+                        <group string="Customer &amp; Order">
+                            <field name="order_id" widget="many2one_avatar" placeholder="Select original order" required="1"/>
+                            <field name="customer_id" widget="many2one_avatar" placeholder="Select customer" required="1"/>
+                            <field name="return_type" widget="radio" options="{'horizontal': true}" required="1"/>
                         </group>
-                        <group string="Status">
-                            <field name="qc_status"/>
-                            <field name="refund_state"/>
-                            <field name="return_channel"/>
-                            <field name="return_store"/>
+                        <group string="Request Status">
+                            <field name="initiation_date" placeholder="Date of request"/>
+                            <field name="sla_deadline" placeholder="SLA completion target"/>
+                            <field name="reason" placeholder="Select primary reason" required="1"/>
+                            <field name="return_channel" widget="badge"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Items &amp; Reasons">
+                        <page string="Items &amp; Reasons" name="items">
                             <group>
-                                <group string="Returned Item">
-                                    <field name="returned_item_sku"/>
-                                    <field name="returned_item_name"/>
-                                    <field name="returned_quantity"/>
+                                <group string="Consignment Info">
+                                    <field name="returned_item_sku" placeholder="SKU of the returned item"/>
+                                    <field name="returned_item_name" placeholder="Name/Description"/>
+                                    <field name="returned_quantity" placeholder="e.g. 1.0"/>
                                 </group>
-                                <group string="Reason &amp; Images">
-                                    <field name="reason_notes"/>
-                                    <field name="customer_images" widget="image"/>
+                                <group string="Supporting Evidence">
+                                    <field name="customer_images" widget="image" options='{"size": [128, 128]}'/>
                                 </group>
                             </group>
-                            <group string="Exchange Details" invisible="return_type not in ['exchange_same', 'exchange_different', 'old_gold']">
+                            <label for="reason_notes" string="Detailed Reason Notes"/>
+                            <field name="reason_notes" placeholder="Explain the customer's issue in detail..."/>
+                            <group string="Exchange Configuration" invisible="return_type not in ['exchange_same', 'exchange_different', 'old_gold']">
                                 <group>
-                                    <field name="exchange_item_sku"/>
-                                    <field name="exchange_item_name"/>
-                                    <field name="exchange_price_diff"/>
+                                    <field name="exchange_item_sku" placeholder="New SKU for customer"/>
+                                    <field name="exchange_item_name" placeholder="Replacement Product Name"/>
+                                    <field name="exchange_price_diff" widget="monetary" options="{'currency_field': 'currency_name'}"/>
                                 </group>
-                                <group string="Old Gold Exchange" invisible="return_type != 'old_gold'">
-                                    <field name="old_gold_weight"/>
-                                    <field name="old_gold_rate"/>
-                                    <field name="old_gold_value"/>
+                                <group string="Old Gold Exchange Process" invisible="return_type != 'old_gold'">
+                                    <field name="old_gold_weight" placeholder="Weight in grams"/>
+                                    <field name="old_gold_rate" placeholder="Current market rate"/>
+                                    <field name="old_gold_value" widget="monetary" options="{'currency_field': 'currency_name'}"/>
                                 </group>
                             </group>
                         </page>
-                        <page string="Logistics &amp; QC">
+                        <page string="Logistics &amp; QC" name="logistics">
                             <group>
                                 <group string="Return Shipping">
-                                    <field name="logistics_id"/>
-                                    <field name="return_awb"/>
+                                    <field name="logistics_id" placeholder="Related tracking record"/>
+                                    <field name="return_awb" placeholder="Return AWB Number"/>
                                     <field name="return_pickup_date"/>
-                                    <field name="shipping_cost_by"/>
+                                    <field name="shipping_cost_by" widget="radio" options="{'horizontal': true}"/>
                                 </group>
                                 <group string="QC Assessment">
-                                    <field name="qc_done_by"/>
-                                    <field name="qc_notes"/>
-                                    <field name="inventory_restocked"/>
-                                    <field name="restock_location"/>
+                                    <field name="qc_status" widget="badge" decoration-success="qc_status == 'passed'" decoration-danger="qc_status in ('failed_damaged', 'failed_tampered')" decoration-info="qc_status == 'pending'"/>
+                                    <field name="qc_done_by" placeholder="Inspector name"/>
+                                    <field name="return_received_date" readonly="1"/>
+                                </group>
+                            </group>
+                            <label for="qc_notes" string="Quality Inspection Notes"/>
+                            <field name="qc_notes" placeholder="Observations from the warehouse team..."/>
+                            <group string="Inventory Reconciliation">
+                                <group>
+                                    <field name="inventory_restocked" widget="boolean_toggle"/>
+                                    <field name="restock_location" placeholder="e.g. Main Warehouse / Damage Shelf"/>
+                                </group>
+                                <group>
+                                    <field name="restock_date" readonly="1"/>
                                 </group>
                             </group>
                         </page>
-                        <page string="Refund &amp; Settlement">
+                        <page string="Settled Refund" name="refund">
                             <group>
-                                <group string="Refund Calculation">
-                                    <field name="refund_type"/>
-                                    <field name="refund_amount"/>
-                                    <field name="shipping_deduction"/>
-                                    <field name="restocking_deduction"/>
-                                    <field name="final_refund_amount"/>
+                                <group string="Financial Matrix">
+                                    <field name="refund_type" widget="radio"/>
+                                    <field name="refund_amount" widget="monetary" options="{'currency_field': 'currency_name'}" placeholder="0.00"/>
+                                    <field name="shipping_deduction" widget="monetary" options="{'currency_field': 'currency_name'}" placeholder="0.00"/>
+                                    <field name="restocking_deduction" widget="monetary" options="{'currency_field': 'currency_name'}" placeholder="0.00"/>
+                                    <field name="final_refund_amount" widget="monetary" options="{'currency_field': 'currency_name'}" decoration-bf="1"/>
+                                    <field name="currency_name" invisible="1"/>
                                 </group>
-                                <group string="Refund Status">
-                                    <field name="refund_transaction_id"/>
-                                    <field name="refund_date"/>
-                                    <field name="approval_date"/>
-                                    <field name="completion_date"/>
+                                <group string="Processing Status">
+                                    <field name="refund_state" widget="badge" decoration-success="refund_state == 'processed'" decoration-info="refund_state == 'approved'" decoration-danger="refund_state == 'rejected'" decoration-warning="refund_state == 'pending'"/>
+                                    <field name="refund_transaction_id" placeholder="Gateway / Bank Ref ID"/>
+                                    <field name="refund_date" readonly="1"/>
                                 </group>
                             </group>
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
+        </field>
+    </record>
+
+    <record id="view_gold_returns_kanban" model="ir.ui.view">
+        <field name="name">gold.returns.kanban</field>
+        <field name="model">gold.returns</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <field name="name"/>
+                <field name="customer_id"/>
+                <field name="state"/>
+                <field name="initiation_date"/>
+                <field name="final_refund_amount"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_record_top">
+                                <strong class="o_kanban_record_title"><field name="name"/></strong>
+                                <span class="float-end"><field name="initiation_date" widget="date"/></span>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <field name="customer_id"/>
+                                <div class="mt-1">
+                                    <field name="state" widget="badge" decoration-success="state == 'completed'" decoration-info="state == 'approved'"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_bottom mt-2">
+                                <div class="oe_kanban_bottom_left">
+                                    <field name="return_type" widget="badge"/>
+                                </div>
+                                <div class="oe_kanban_bottom_right fw-bold">
+                                    <field name="final_refund_amount" widget="monetary"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_gold_returns_graph" model="ir.ui.view">
+        <field name="name">gold.returns.graph</field>
+        <field name="model">gold.returns</field>
+        <field name="arch" type="xml">
+            <graph string="Returns Analysis" sample="1">
+                <field name="reason"/>
+                <field name="final_refund_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_gold_returns_pivot" model="ir.ui.view">
+        <field name="name">gold.returns.pivot</field>
+        <field name="model">gold.returns</field>
+        <field name="arch" type="xml">
+            <pivot string="Returns Analysis" sample="1">
+                <field name="initiation_date" type="row"/>
+                <field name="return_type" type="col"/>
+                <field name="final_refund_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_gold_returns_calendar" model="ir.ui.view">
+        <field name="name">gold.returns.calendar</field>
+        <field name="model">gold.returns</field>
+        <field name="arch" type="xml">
+            <calendar string="Returns" date_start="initiation_date" color="state" mode="month">
+                <field name="name"/>
+                <field name="customer_id"/>
+                <field name="state"/>
+            </calendar>
         </field>
     </record>
 
@@ -117,17 +207,23 @@
         <field name="model">gold.returns</field>
         <field name="arch" type="xml">
             <search string="Search Returns">
-                <field name="name"/>
+                <field name="name" string="RMA/Order/Customer" filter_domain="['|', '|', ('name', 'ilike', self), ('order_id', 'ilike', self), ('customer_id', 'ilike', self)]"/>
                 <field name="order_id"/>
                 <field name="customer_id"/>
                 <field name="state"/>
                 <field name="qc_status"/>
-                <filter name="pending_qc" string="Pending QC" domain="[('qc_status', '=', 'pending')]"/>
-                <filter name="pending_refund" string="Pending Refund" domain="[('refund_state', '=', 'pending')]"/>
+                <separator/>
+                <filter name="pending_qc" string="QC Pending" domain="[('qc_status', '=', 'pending')]"/>
+                <filter name="qc_passed" string="QC Passed" domain="[('qc_status', '=', 'passed')]"/>
+                <filter name="pending_refund" string="Refund To Process" domain="[('refund_state', '=', 'pending'), ('state', '=', 'approved')]"/>
+                <separator/>
+                <filter name="today" string="Initiated Today" domain="[('initiation_date', '&gt;=', datetime.datetime.now().strftime('%Y-%m-%d 00:00:00')), ('initiation_date', '&lt;=', datetime.datetime.now().strftime('%Y-%m-%d 23:59:59'))]"/>
                 <group expand="0" string="Group By">
+                    <filter name="group_by_customer" string="Customer" context="{'group_by': 'customer_id'}"/>
                     <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_by_type" string="Return Type" context="{'group_by': 'return_type'}"/>
                     <filter name="group_by_reason" string="Reason" context="{'group_by': 'reason'}"/>
+                    <filter name="group_by_month" string="Initiation Month" context="{'group_by': 'initiation_date:month'}"/>
                 </group>
             </search>
         </field>
@@ -136,7 +232,15 @@
     <record id="action_gold_returns" model="ir.actions.act_window">
         <field name="name">Returns &amp; Exchanges</field>
         <field name="res_model">gold.returns</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">tree,kanban,calendar,graph,pivot,form</field>
+        <field name="context">{'search_default_pending_qc': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Record your first return request!
+            </p><p>
+                Manage RMA, quality checks, exchanges, and financial refunds.
+            </p>
+        </field>
     </record>
 
     <menuitem id="menu_gold_rtn_root" name="Returns" parent="menu_sales_management_root" sequence="80"/>

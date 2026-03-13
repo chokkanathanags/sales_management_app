@@ -1,15 +1,17 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 
 class GoldPayment(models.Model):
     _name = 'gold.payment'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Gold Payment'
     _rec_name = 'name'
     _order = 'payment_date desc'
 
     name = fields.Char(string='Payment Reference', required=True, default='New', copy=False)
-    order_id = fields.Many2one('gold.purchase', string='Order')
-    customer_id = fields.Many2one('gold.customer', string='Customer')
+    order_id = fields.Many2one('gold.purchase', string='Order', tracking=True)
+    customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
 
     # Payment Method
@@ -29,7 +31,7 @@ class GoldPayment(models.Model):
         ('gold_exchange', 'Old Gold Exchange'),
         ('split', 'Split Payment'),
         ('advance', 'Advance Payment'),
-    ], string='Payment Method', required=True)
+    ], string='Payment Method', required=True, tracking=True)
 
     # Gateway
     payment_gateway = fields.Selection([
@@ -39,13 +41,13 @@ class GoldPayment(models.Model):
         ('paytm', 'Paytm'),
         ('stripe', 'Stripe'),
         ('manual', 'Manual / Offline'),
-    ], string='Payment Gateway')
-    transaction_id = fields.Char(string='Transaction ID', copy=False, index=True)
+    ], string='Payment Gateway', tracking=True)
+    transaction_id = fields.Char(string='Transaction ID', copy=False, index=True, tracking=True)
     gateway_order_id = fields.Char(string='Gateway Order ID')
     gateway_response = fields.Text(string='Gateway Response (JSON)')
 
     # Amounts
-    amount = fields.Float(string='Payment Amount', required=True)
+    amount = fields.Float(string='Payment Amount', required=True, tracking=True)
     currency_name = fields.Char(string='Currency', default='INR')
     gateway_charges = fields.Float(string='Gateway Charges')
     refund_amount = fields.Float(string='Refunded Amount')
@@ -56,7 +58,7 @@ class GoldPayment(models.Model):
     emi_monthly_amount = fields.Float(string='Monthly EMI Amount')
 
     # Dates
-    payment_date = fields.Datetime(string='Payment Date', default=fields.Datetime.now)
+    payment_date = fields.Datetime(string='Payment Date', default=fields.Datetime.now, tracking=True)
     settlement_date = fields.Date(string='Settlement Date')
     refund_date = fields.Datetime(string='Refund Date')
 
@@ -71,7 +73,7 @@ class GoldPayment(models.Model):
         ('partially_refunded', 'Partially Refunded'),
         ('chargeback', 'Chargeback'),
         ('reconciled', 'Reconciled'),
-    ], string='Payment Status', default='initiated', index=True)
+    ], string='Payment Status', default='initiated', index=True, tracking=True)
 
     # Reconciliation
     is_reconciled = fields.Boolean(string='Reconciled', default=False)
@@ -89,7 +91,7 @@ class GoldPayment(models.Model):
     refund_transaction_id = fields.Char(string='Refund Transaction ID')
     refund_reason = fields.Text(string='Refund Reason')
 
-    # Old fields kept for compatibility
+    # Compatibility/Technical fields
     code = fields.Char(string='Code')
     description = fields.Text(string='Description')
     category = fields.Char(string='Category')
@@ -98,3 +100,29 @@ class GoldPayment(models.Model):
     base_value = fields.Float(string='Base Value')
     total_value = fields.Float(string='Total Value')
     tax_amount = fields.Float(string='Tax Amount')
+
+    # Validations
+    @api.constrains('amount')
+    def _check_amount(self):
+        for rec in self:
+            if rec.amount <= 0:
+                raise ValidationError(_("Payment amount must be greater than zero."))
+
+    @api.constrains('payment_date')
+    def _check_payment_date(self):
+        for rec in self:
+            if rec.payment_date and rec.payment_date > fields.Datetime.now():
+                raise ValidationError(_("Payment date cannot be in the future."))
+
+    @api.constrains('customer_id')
+    def _check_customer_id(self):
+        for rec in self:
+            if not rec.customer_id:
+                raise ValidationError(_("A customer must be selected for the payment."))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('name', 'New') == 'New':
+                vals['name'] = self.env['ir.sequence'].next_by_code('gold.payment.seq') or 'New'
+        return super(GoldPayment, self).create(vals_list)

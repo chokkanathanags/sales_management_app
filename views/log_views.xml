@@ -4,16 +4,16 @@
         <field name="name">gold.logistics.tree</field>
         <field name="model">gold.logistics</field>
         <field name="arch" type="xml">
-            <tree string="Shipments" decoration-info="status in ('picked_up', 'in_transit')" decoration-success="status == 'delivered'" decoration-danger="status == 'delivery_failed'">
-                <field name="name"/>
-                <field name="order_id"/>
-                <field name="carrier"/>
+            <tree string="Shipments" decoration-info="status in ('picked_up', 'in_transit')" decoration-success="status == 'delivered'" decoration-danger="status == 'delivery_failed'" sample="1">
+                <field name="name" decoration-bf="1"/>
+                <field name="order_id" widget="many2one_avatar"/>
+                <field name="carrier" widget="badge" decoration-info="1"/>
                 <field name="awb_number"/>
-                <field name="dispatch_date"/>
-                <field name="estimated_delivery"/>
-                <field name="status" widget="badge" decoration-success="status == 'delivered'" decoration-info="status == 'in_transit'" decoration-danger="status == 'delivery_failed'"/>
-                <field name="pincode"/>
-                <field name="is_high_value"/>
+                <field name="dispatch_date" optional="show"/>
+                <field name="estimated_delivery" widget="remaining_days"/>
+                <field name="status" widget="badge" decoration-success="status == 'delivered'" decoration-info="status == 'in_transit'" decoration-danger="status == 'delivery_failed'" decoration-warning="status == 'out_for_delivery'"/>
+                <field name="shipping_weight" optional="hide"/>
+                <field name="is_high_value" widget="boolean_toggle"/>
             </tree>
         </field>
     </record>
@@ -24,83 +24,110 @@
         <field name="arch" type="xml">
             <form string="Shipment">
                 <header>
-                    <field name="status" widget="statusbar" statusbar_visible="label_created,pickup_scheduled,picked_up,in_transit,delivered"/>
+                    <field name="status" widget="statusbar" statusbar_visible="label_created,pickup_scheduled,picked_up,in_transit,out_for_delivery,delivered" options="{'clickable': '1'}"/>
                 </header>
                 <sheet>
+                    <widget name="web_ribbon" title="Delivered" bg_color="text-bg-success" invisible="status != 'delivered'"/>
+                    <widget name="web_ribbon" title="Failed" bg_color="text-bg-danger" invisible="status != 'delivery_failed'"/>
+                    <widget name="web_ribbon" title="In Transit" bg_color="text-bg-info" invisible="status != 'in_transit'"/>
+
                     <div class="oe_title">
-                        <label for="name" string="Tracking Number / AWB"/>
-                        <h1><field name="name" readonly="1"/></h1>
+                        <label for="name" string="Tracking Reference"/>
+                        <h1><field name="name" readonly="1" class="oe_inline"/></h1>
+                        <div class="o_row">
+                            <field name="carrier" widget="badge" decoration-info="1" class="ms-1"/>
+                            <field name="delivery_type" widget="badge" decoration-success="delivery_type == 'express'" class="ms-1"/>
+                        </div>
                     </div>
                     <group>
-                        <group string="Carrier &amp; Service">
-                            <field name="order_id"/>
-                            <field name="carrier"/>
-                            <field name="awb_number"/>
-                            <field name="aggregator"/>
-                            <field name="delivery_type"/>
-                            <field name="shipment_type"/>
+                        <group string="Logistics Provider">
+                            <field name="order_id" widget="many2one_avatar" placeholder="Select related order" required="1"/>
+                            <field name="carrier" placeholder="Select carrier (e.g. FedEx)"/>
+                            <field name="awb_number" placeholder="Enter AWB / Tracking Code"/>
+                            <field name="aggregator" placeholder="e.g. Shiprocket"/>
                         </group>
-                        <group string="Status &amp; Timeline">
-                            <field name="dispatch_date"/>
-                            <field name="estimated_delivery"/>
-                            <field name="actual_delivery"/>
-                            <field name="pickup_date"/>
-                            <field name="state"/>
-                        </group>
-                    </group>
-                    <group>
-                        <group string="Weight &amp; Zones">
-                            <field name="shipping_weight"/>
-                            <field name="shipping_volume"/>
-                            <field name="shipping_rate"/>
-                            <field name="shipping_zone"/>
-                            <field name="is_remote_area"/>
-                        </group>
-                        <group string="High Value &amp; Security">
-                            <field name="is_high_value"/>
-                            <field name="insurance_required"/>
-                            <field name="insurance_amount"/>
-                            <field name="gps_tracking"/>
-                            <field name="tamper_proof"/>
+                        <group string="Operational Timeline">
+                            <field name="dispatch_date" placeholder="Actual dispatch time"/>
+                            <field name="estimated_delivery" placeholder="Promised delivery date"/>
+                            <field name="actual_delivery" readonly="1"/>
+                            <field name="pickup_date" placeholder="Scheduled pickup"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Delivery &amp; Routing">
+                        <page string="Routing &amp; Delivery" name="routing">
                             <group>
-                                <group string="Addresses">
-                                    <field name="from_address"/>
-                                    <field name="to_address"/>
-                                    <field name="pincode"/>
+                                <group string="Consignment Details">
+                                    <field name="shipment_type" widget="radio" options="{'horizontal': true}"/>
+                                    <field name="delivery_type"/>
+                                    <field name="shipping_zone" placeholder="e.g. Zone A (Domestic)"/>
                                 </group>
-                                <group string="Instructions">
-                                    <field name="delivery_instructions"/>
+                                <group string="Geography">
+                                    <field name="pincode" placeholder="6 Digit PIN code"/>
+                                    <field name="is_remote_area" widget="boolean_toggle"/>
+                                    <field name="remote_surcharge" invisible="not is_remote_area" widget="monetary" options="{'currency_field': 'currency_name'}"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="From Address">
+                                    <field name="from_address" nolabel="1" placeholder="Warehouse / Pickup Address..."/>
+                                </group>
+                                <group string="To Address">
+                                    <field name="to_address" nolabel="1" placeholder="Customer Shipping Address..."/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Weight &amp; Pricing" name="pricing">
+                            <group>
+                                <group string="Dimensions">
+                                    <field name="shipping_weight" placeholder="Weight in kg"/>
+                                    <field name="shipping_volume" placeholder="Volume in cm³"/>
+                                </group>
+                                <group string="Freight Charges">
+                                    <field name="shipping_rate" widget="monetary" options="{'currency_field': 'currency_name'}"/>
+                                    <field name="currency_name" invisible="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Warehouse Operations" name="warehouse">
+                            <group>
+                                <group string="Operations">
+                                    <field name="packed_by" placeholder="Staff name / ID"/>
+                                    <field name="batch_code" placeholder="Pick wave ID"/>
+                                    <field name="quality_check_done" widget="boolean_toggle"/>
+                                    <field name="is_gift_wrapped" widget="boolean_toggle"/>
+                                </group>
+                                <group string="Security &amp; Insurance">
+                                    <field name="is_high_value" widget="boolean_toggle"/>
+                                    <field name="insurance_required" widget="boolean_toggle"/>
+                                    <field name="insurance_amount" invisible="not insurance_required" widget="monetary" options="{'currency_field': 'currency_name'}"/>
+                                    <field name="tamper_proof" widget="boolean_toggle"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Proof of Delivery" name="pod" invisible="status != 'delivered'">
+                            <group>
+                                <group>
+                                    <field name="pod_image" widget="image" options='{"size": [256, 256]}'/>
+                                </group>
+                                <group>
                                     <field name="signature_required"/>
                                     <field name="contactless"/>
                                 </group>
                             </group>
                         </page>
-                        <page string="Warehouse &amp; Packing">
+                        <page string="Reverse Logistics" name="returns" invisible="status not in ['rto_initiated', 'rto_in_transit', 'rto_received']">
                             <group>
-                                <group string="Packing">
-                                    <field name="quality_check_done"/>
-                                    <field name="is_gift_wrapped"/>
-                                    <field name="packed_by"/>
-                                </group>
-                                <group string="Documentation">
-                                    <field name="has_jewelry_cert"/>
-                                    <field name="has_warranty_card"/>
-                                    <field name="has_care_instructions"/>
-                                </group>
-                            </group>
-                        </page>
-                        <page string="Returns &amp; RTO" invisible="status not in ['rto_initiated', 'rto_in_transit', 'rto_received']">
-                            <group>
-                                <field name="return_awb"/>
-                                <field name="return_shipment_id"/>
+                                <field name="return_awb" placeholder="Return tracking number"/>
+                                <field name="return_shipment_id" context="{'default_shipment_type': 'reverse'}"/>
                             </group>
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>
@@ -109,19 +136,23 @@
         <field name="name">gold.logistics.kanban</field>
         <field name="model">gold.logistics</field>
         <field name="arch" type="xml">
-            <kanban>
+            <kanban class="o_kanban_mobile" sample="1">
                 <field name="name"/>
                 <field name="carrier"/>
                 <field name="status"/>
+                <field name="awb_number"/>
                 <templates>
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click">
                             <div class="o_kanban_record_top">
-                                <strong><field name="name"/></strong>
-                                <span class="float-right badge badge-primary"><field name="carrier"/></span>
+                                <strong class="o_kanban_record_title"><field name="name"/></strong>
+                                <span class="float-end"><field name="carrier" widget="label_selection" options="{'classes': {'bluedart': 'info', 'fedex': 'primary'}}"/></span>
                             </div>
                             <div class="o_kanban_record_body">
-                                <div>Status: <field name="status"/></div>
+                                <div class="text-muted fa fa-truck"> <field name="awb_number"/></div>
+                                <div class="mt-1">
+                                    <field name="status" widget="badge" decoration-success="status == 'delivered'" decoration-info="status == 'in_transit'" decoration-danger="status == 'delivery_failed'"/>
+                                </div>
                             </div>
                         </div>
                     </t>
@@ -130,23 +161,50 @@
         </field>
     </record>
 
+    <record id="view_gold_logistics_graph" model="ir.ui.view">
+        <field name="name">gold.logistics.graph</field>
+        <field name="model">gold.logistics</field>
+        <field name="arch" type="xml">
+            <graph string="Logistics Analysis" sample="1">
+                <field name="carrier"/>
+                <field name="status"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_gold_logistics_calendar" model="ir.ui.view">
+        <field name="name">gold.logistics.calendar</field>
+        <field name="model">gold.logistics</field>
+        <field name="arch" type="xml">
+            <calendar string="Shipments" date_start="dispatch_date" date_stop="estimated_delivery" color="carrier" mode="month">
+                <field name="name"/>
+                <field name="carrier"/>
+                <field name="status"/>
+            </calendar>
+        </field>
+    </record>
+
     <record id="view_gold_logistics_search" model="ir.ui.view">
         <field name="name">gold.logistics.search</field>
         <field name="model">gold.logistics</field>
         <field name="arch" type="xml">
             <search string="Search Shipments">
-                <field name="name"/>
+                <field name="name" string="Tracking/AWB/Order" filter_domain="['|', '|', ('name', 'ilike', self), ('awb_number', 'ilike', self), ('order_id', 'ilike', self)]"/>
                 <field name="awb_number"/>
-                <field name="order_id"/>
                 <field name="carrier"/>
                 <field name="status"/>
-                <filter name="in_transit" string="In Transit" domain="[('status', '=', 'in_transit')]"/>
+                <separator/>
+                <filter name="in_transit" string="In Transit" domain="[('status', 'in', ('picked_up', 'in_transit', 'out_for_delivery'))]"/>
                 <filter name="delivered" string="Delivered" domain="[('status', '=', 'delivered')]"/>
+                <filter name="issue" string="Issues/Failed" domain="[('status', '=', 'delivery_failed')]"/>
+                <separator/>
+                <filter name="express" string="Express Delivery" domain="[('delivery_type', '=', 'express')]"/>
                 <filter name="high_value" string="High Value" domain="[('is_high_value', '=', True)]"/>
                 <group expand="0" string="Group By">
                     <filter name="group_by_carrier" string="Carrier" context="{'group_by': 'carrier'}"/>
                     <filter name="group_by_status" string="Tracking Status" context="{'group_by': 'status'}"/>
-                    <filter name="group_by_type" string="Shipment Type" context="{'group_by': 'shipment_type'}"/>
+                    <filter name="group_by_order" string="Order" context="{'group_by': 'order_id'}"/>
+                    <filter name="group_by_month" string="Dispatch Month" context="{'group_by': 'dispatch_date:month'}"/>
                 </group>
             </search>
         </field>
@@ -155,7 +213,8 @@
     <record id="action_gold_logistics" model="ir.actions.act_window">
         <field name="name">Logistics &amp; Tracking</field>
         <field name="res_model">gold.logistics</field>
-        <field name="view_mode">tree,kanban,form</field>
+        <field name="view_mode">tree,kanban,calendar,graph,form</field>
+        <field name="context">{'search_default_in_transit': 1}</field>
     </record>
 
     <menuitem id="menu_gold_log_root" name="Logistics" parent="menu_sales_management_root" sequence="70"/>

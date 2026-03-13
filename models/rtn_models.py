@@ -3,14 +3,21 @@ from odoo import models, fields, api
 
 class GoldReturns(models.Model):
     _name = 'gold.returns'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Gold Returns & Exchanges'
     _rec_name = 'name'
     _order = 'initiation_date desc'
 
-    name = fields.Char(string='RMA Number', required=True, default='New', copy=False, index=True)
-    order_id = fields.Many2one('gold.purchase', string='Original Order')
-    customer_id = fields.Many2one('gold.customer', string='Customer')
+    name = fields.Char(string='RMA Number', required=True, default='New', copy=False, index=True, tracking=True)
+    order_id = fields.Many2one('gold.purchase', string='Original Order', required=True, tracking=True)
+    customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
+
+    @api.model
+    def create(self, vals):
+        if vals.get('name', 'New') == 'New':
+            vals['name'] = self.env['ir.sequence'].next_by_code('gold.returns.seq') or 'New'
+        return super(GoldReturns, self).create(vals)
 
     # Return Type
     return_type = fields.Selection([
@@ -20,7 +27,7 @@ class GoldReturns(models.Model):
         ('exchange_same', 'Exchange - Same Product (Size/Variant)'),
         ('exchange_different', 'Exchange - Different Product'),
         ('old_gold', 'Old Gold Exchange'),
-    ], string='Return Type', required=True, default='full')
+    ], string='Return Type', required=True, default='full', tracking=True)
 
     # Reason
     reason = fields.Selection([
@@ -70,7 +77,7 @@ class GoldReturns(models.Model):
         ('passed', 'QC Passed'),
         ('failed_damaged', 'Failed - Damaged'),
         ('failed_tampered', 'Failed - Tampered'),
-    ], string='QC Status', default='pending')
+    ], string='QC Status', default='pending', tracking=True)
     qc_notes = fields.Text(string='QC Notes')
     qc_done_by = fields.Char(string='QC Done By')
 
@@ -96,7 +103,7 @@ class GoldReturns(models.Model):
         ('approved', 'Refund Approved'),
         ('processed', 'Refund Processed'),
         ('rejected', 'Refund Rejected'),
-    ], string='Refund Status', default='pending')
+    ], string='Refund Status', default='pending', tracking=True)
     refund_transaction_id = fields.Char(string='Refund Transaction ID')
     refund_date = fields.Datetime(string='Refund Processed On')
 

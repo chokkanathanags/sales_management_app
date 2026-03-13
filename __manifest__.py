@@ -4,9 +4,10 @@
     'category': 'Operations',
     'summary': 'All-in-one app: Inventory, Pricing, OMS, Customer, Promotions, Payment, Logistics, Returns',
     'author': 'Your Company',
-    'depends': ['base'],
+    'depends': ['base', 'mail'],
     'data': [
         'security/ir.model.access.csv',
+        'data/ir_sequence_data.xml',
         'data/sample_data.xml',
         'views/inv_views.xml',
         'views/prc_views.xml',

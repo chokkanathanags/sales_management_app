@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Sequence for Gold Payment -->
+        <record id="seq_gold_payment" model="ir.sequence">
+            <field name="name">Gold Payment Sequence</field>
+            <field name="code">gold.payment.seq</field>
+            <field name="prefix">PAY/%(range_year)s/</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Sequence for Gold Customer -->
+        <record id="seq_gold_customer" model="ir.sequence">
+            <field name="name">Gold Customer Sequence</field>
+            <field name="code">gold.customer.seq</field>
+            <field name="prefix">CUST/</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+    <!-- Sequence for Logistics -->
+    <record id="seq_gold_logistics" model="ir.sequence">
+        <field name="name">Gold Logistics Tracking Sequence</field>
+        <field name="code">gold.logistics.seq</field>
+        <field name="prefix">TRK/%(y)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Sequence for Returns -->
+    <record id="seq_gold_returns" model="ir.sequence">
+        <field name="name">Gold Returns RMA Sequence</field>
+        <field name="code">gold.returns.seq</field>
+        <field name="prefix">RMA/%(y)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>
