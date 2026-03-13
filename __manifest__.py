@@ -9,6 +9,7 @@
         'security/ir.model.access.csv',
         'data/ir_sequence_data.xml',
         'data/sample_data.xml',
+        'data/inv_category_data.xml',
         'views/inv_views.xml',
         'views/prc_views.xml',
         'views/oms_views.xml',
@@ -17,7 +18,14 @@
         'views/pay_views.xml',
         'views/log_views.xml',
         'views/rtn_views.xml',
+        'views/menu_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'sales_management_app/static/src/js/form_safeguard.js',
+            'sales_management_app/static/src/css/ui_style.css',
+        ],
+    },
     'installable': True,
     'application': True,
 }

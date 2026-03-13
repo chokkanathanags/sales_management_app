@@ -4,19 +4,15 @@
         <field name="name">gold.rate.tree</field>
         <field name="model">gold.rate</field>
         <field name="arch" type="xml">
-            <tree string="Gold Rates" decoration-muted="not active">
+            <tree string="Gold Rates" decoration-muted="not active" decoration-bf="active">
+                <field name="effective_date"/>
                 <field name="name"/>
                 <field name="metal_type"/>
                 <field name="karat"/>
-                <field name="price_per_gram"/>
-                <field name="price_per_10g"/>
-                <field name="purity_factor"/>
-                <field name="making_charge_pct"/>
-                <field name="wastage_pct"/>
-                <field name="gst_gold"/>
-                <field name="effective_date"/>
-                <field name="rate_source"/>
-                <field name="active"/>
+                <field name="price_per_gram" string="Rate/g" decoration-bf="1"/>
+                <field name="price_per_10g" string="Rate/10g"/>
+                <field name="rate_source" widget="badge"/>
+                <field name="active" widget="boolean_toggle"/>
             </tree>
         </field>
     </record>
@@ -25,41 +21,55 @@
         <field name="name">gold.rate.form</field>
         <field name="model">gold.rate</field>
         <field name="arch" type="xml">
-            <form string="Gold Rate">
+            <form string="Gold Rate" class="tab-pricing-accent">
                 <sheet>
-                    <group>
-                        <group string="Rate Details">
-                            <field name="name"/>
-                            <field name="code"/>
-                            <field name="metal_type"/>
-                            <field name="karat"/>
-                            <field name="purity_factor"/>
-                            <field name="active"/>
-                        </group>
-                        <group string="Rate">
-                            <field name="price_per_gram"/>
-                            <field name="price_per_10g"/>
-                            <field name="price_per_tola"/>
-                            <field name="rate_source"/>
-                            <field name="region"/>
-                        </group>
-                    </group>
-                    <group>
-                        <group string="Price Components">
-                            <field name="making_charge_fixed"/>
-                            <field name="making_charge_pct"/>
-                            <field name="wastage_pct"/>
-                            <field name="gst_gold"/>
-                            <field name="gst_making"/>
-                            <field name="gst_diamond"/>
-                        </group>
-                        <group string="Validity">
-                            <field name="effective_date"/>
-                            <field name="expiry_date"/>
-                            <field name="pricelist_id"/>
-                        </group>
-                    </group>
-                    <field name="description" placeholder="Description..."/>
+                    <notebook>
+                        <page string="Rate Details" name="details">
+                            <group>
+                                <group string="Basic Info">
+                                    <field name="name" placeholder="e.g. Daily Market Rate - 22K (916)"/>
+                                    <field name="code" placeholder="e.g. GOLD-22K-DAILY"/>
+                                    <field name="metal_type" placeholder="e.g. Gold, Silver, Platinum"/>
+                                    <field name="karat" placeholder="e.g. 22K, 24K, 18K"/>
+                                    <field name="purity_factor" placeholder="e.g. 0.916"/>
+                                </group>
+                                <group string="Current Price">
+                                    <field name="price_per_gram" placeholder="e.g. 6250.00"/>
+                                    <field name="price_per_10g" placeholder="e.g. 62500.00"/>
+                                    <field name="price_per_tola" placeholder="e.g. 72900.00"/>
+                                    <field name="rate_source" placeholder="e.g. Dubai Gold Market, Local Bullion"/>
+                                    <field name="region" placeholder="e.g. Bangalore, KA"/>
+                                    <field name="active"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Price Components" name="components">
+                            <group>
+                                <group string="Charges &amp; Wastage">
+                                    <field name="making_charge_fixed" placeholder="e.g. 150.00"/>
+                                    <field name="making_charge_pct" placeholder="e.g. 12.0 (%)"/>
+                                    <field name="wastage_pct" placeholder="e.g. 3.5 (%)"/>
+                                </group>
+                                <group string="Taxation (%)">
+                                    <field name="gst_gold" placeholder="e.g. 3.0 (%)"/>
+                                    <field name="gst_making" placeholder="e.g. 5.0 (%)"/>
+                                    <field name="gst_diamond" placeholder="e.g. 18.0 (%)"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Validity &amp; Notes" name="validity">
+                            <group>
+                                <group string="Dates">
+                                    <field name="effective_date"/>
+                                    <field name="expiry_date"/>
+                                </group>
+                                <group string="Pricelist">
+                                    <field name="pricelist_id"/>
+                                </group>
+                            </group>
+                            <field name="description" placeholder="Add specific details about the source of this rate..."/>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
@@ -118,10 +128,10 @@
                             <field name="active"/>
                         </group>
                         <group string="Applicability">
-                            <field name="customer_segment"/>
-                            <field name="region"/>
-                            <field name="start_date"/>
-                            <field name="end_date"/>
+                            <field name="customer_segment" placeholder="e.g. VIP, Wholesale, Retail"/>
+                            <field name="region" placeholder="e.g. South India, GCC"/>
+                            <field name="start_date" placeholder="Effective From"/>
+                            <field name="end_date" placeholder="Valid Until"/>
                         </group>
                     </group>
                     <field name="rate_ids">
@@ -202,8 +212,4 @@
         <field name="view_mode">tree</field>
     </record>
 
-    <menuitem id="menu_gold_pricing_root" name="Pricing" parent="menu_sales_management_root" sequence="20"/>
-    <menuitem id="menu_gold_pricing" name="Gold Rates" parent="menu_gold_pricing_root" action="action_gold_rate" sequence="10"/>
-    <menuitem id="menu_gold_pricelist" name="Price Lists" parent="menu_gold_pricing_root" action="action_gold_pricelist" sequence="20"/>
-    <menuitem id="menu_gold_price_history" name="Price History" parent="menu_gold_pricing_root" action="action_gold_price_history" sequence="30"/>
 </odoo>

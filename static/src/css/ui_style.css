@@ -1,0 +1,104 @@
+/* High-End "Top Class" UI for Gold ERP */
+
+/* --- Universal Notebook Refinement --- */
+.o_notebook .nav-tabs {
+    border-bottom: 2px solid #edeff1 !important;
+    padding: 0 10px !important;
+    margin-bottom: 25px !important;
+    gap: 12px !important;
+}
+
+.o_notebook .nav-tabs .nav-link {
+    border: 1px solid transparent !important;
+    border-radius: 50px !important; /* Elegant Pill Style */
+    margin: 5px 0 !important;
+    padding: 8px 18px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    letter-spacing: 0.2px !important;
+    transition: all 0.3s ease !important;
+    background-color: transparent !important;
+    color: #666 !important;
+}
+
+.o_notebook .nav-tabs .nav-link:hover {
+    background-color: #f8f9fa !important;
+    color: #333 !important;
+}
+
+/* --- Forest Emerald Theme: Inventory & Details --- */
+.nav-link[data-name="info"], 
+.nav-link[data-name="inventory"] {
+    color: #2d5a27 !important;
+}
+.nav-link[data-name="info"].active, 
+.nav-link[data-name="inventory"].active {
+    background: linear-gradient(135deg, #2d5a27 0%, #3e7a36 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(45, 90, 39, 0.25) !important;
+}
+
+/* --- Royal Gold Theme: Pricing & Rates --- */
+.nav-link[data-name="pricing"], 
+.nav-link[data-name="components"] {
+    color: #8c733e !important;
+}
+.nav-link[data-name="pricing"].active, 
+.nav-link[data-name="components"].active {
+    background: linear-gradient(135deg, #8c733e 0%, #b39b60 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(140, 115, 62, 0.25) !important;
+}
+
+/* --- Elegant Slate: Secondary Info --- */
+.nav-link[data-name="notes"], 
+.nav-link[data-name="validity"],
+.nav-link[data-name="details"] {
+    color: #455a64 !important;
+}
+.nav-link[data-name="notes"].active, 
+.nav-link[data-name="validity"].active,
+.nav-link[data-name="details"].active {
+    background: linear-gradient(135deg, #455a64 0%, #607d8b 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(69, 90, 100, 0.25) !important;
+}
+
+/* --- Premium Form Layout --- */
+.o_form_sheet {
+    border-radius: 12px !important;
+    border: 1px solid #e0e0e0 !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.03) !important;
+    background: #ffffff !important;
+}
+
+/* Header Accent for Inventory */
+.o_form_view:has(.tab-inventory-accent) .o_form_sheet {
+    border-top: 6px solid #2d5a27 !important;
+}
+
+/* Header Accent for Pricing */
+.o_form_view:has(.tab-pricing-accent) .o_form_sheet {
+    border-top: 6px solid #8c733e !important;
+}
+
+.oe_title h1 field[name="name"] {
+    color: #1a1a1a !important;
+    letter-spacing: -0.5px !important;
+    font-weight: 700 !important;
+}
+
+.o_horizontal_separator {
+    color: #444 !important;
+    font-size: 15px !important;
+    text-transform: none !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid #f1f1f1 !important;
+    margin-top: 30px !important;
+}
+
+/* Subtle background for groups */
+.o_group {
+    padding: 15px !important;
+    border-radius: 8px !important;
+}

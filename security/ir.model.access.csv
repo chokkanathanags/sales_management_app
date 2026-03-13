@@ -5,6 +5,7 @@ access_gold_inventory_reservation,gold.inventory.reservation,model_gold_inventor
 access_gold_rate,gold.rate,model_gold_rate,base.group_user,1,1,1,1
 access_gold_pricelist,gold.pricelist,model_gold_pricelist,base.group_user,1,1,1,1
 access_gold_price_history,gold.price.history,model_gold_price_history,base.group_user,1,1,1,1
+access_gold_category,gold.category,model_gold_category,base.group_user,1,1,1,1
 access_gold_promotions,gold.promotions,model_gold_promotions,base.group_user,1,1,1,1
 access_gold_coupon,gold.coupon,model_gold_coupon,base.group_user,1,1,1,1
 access_gold_purchase,gold.purchase,model_gold_purchase,base.group_user,1,1,1,1

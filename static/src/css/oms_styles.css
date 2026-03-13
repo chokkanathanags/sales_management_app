@@ -1,0 +1,42 @@
+/* Tab Color Variations for Gold ERP */
+
+/* General Information - Blue */
+.tab-info-bg .nav-link {
+    color: #2c3e50 !important;
+    border-bottom: 3px solid transparent !important;
+}
+.tab-info-bg .nav-link.active {
+    color: #3498db !important;
+    border-bottom: 3px solid #3498db !important;
+    background-color: rgba(52, 152, 219, 0.05) !important;
+}
+
+/* Inventory & Storage - Orange/Gold */
+.tab-inventory-bg .nav-link {
+    color: #2c3e50 !important;
+}
+.tab-inventory-bg .nav-link.active {
+    color: #f39c12 !important;
+    border-bottom: 3px solid #f39c12 !important;
+    background-color: rgba(243, 156, 18, 0.05) !important;
+}
+
+/* Pricing & Value - Green */
+.tab-pricing-bg .nav-link {
+    color: #2c3e50 !important;
+}
+.tab-pricing-bg .nav-link.active {
+    color: #27ae60 !important;
+    border-bottom: 3px solid #27ae60 !important;
+    background-color: rgba(39, 174, 96, 0.05) !important;
+}
+
+/* Internal Notes - Grey */
+.tab-notes-bg .nav-link {
+    color: #2c3e50 !important;
+}
+.tab-notes-bg .nav-link.active {
+    color: #7f8c8d !important;
+    border-bottom: 3px solid #7f8c8d !important;
+    background-color: rgba(127, 140, 141, 0.05) !important;
+}

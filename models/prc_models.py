@@ -31,7 +31,7 @@ class GoldRate(models.Model):
     purity_factor = fields.Float(string='Purity Factor', default=0.916)
 
     # Rates
-    price_per_gram = fields.Float(string='Price per Gram (INR)', required=True)
+    price_per_gram = fields.Float(string='Price per Gram (INR)', required=True, default=0.0)
     price_per_10g = fields.Float(string='Price per 10g (INR)', compute='_compute_rates', store=True)
     price_per_tola = fields.Float(string='Price per Tola (INR)', compute='_compute_rates', store=True)
 
@@ -44,6 +44,12 @@ class GoldRate(models.Model):
         ('local', 'Local Market'),
         ('custom', 'Custom/Manual'),
     ], string='Rate Source', default='custom')
+    
+    @api.constrains('effective_date', 'expiry_date')
+    def _check_dates(self):
+        for rec in self:
+            if rec.expiry_date and rec.expiry_date <= rec.effective_date:
+                raise ValidationError("Expiry date must be after the effective date.")
     region = fields.Char(string='Region (for regional rates)')
 
     # Price Components
@@ -57,7 +63,11 @@ class GoldRate(models.Model):
     # Price List
     pricelist_id = fields.Many2one('gold.pricelist', string='Price List')
 
-    @api.depends('price_per_gram')
+    @api.constrains('price_per_gram')
+    def _check_price(self):
+        for rec in self:
+            if rec.price_per_gram <= 0:
+                raise ValidationError("Price per gram must be greater than zero.")
     def _compute_rates(self):
         for rec in self:
             rec.price_per_10g = rec.price_per_gram * 10

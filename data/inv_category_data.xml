@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="cat_gold_jewelry" model="gold.category">
+            <field name="name">Gold Jewelry</field>
+        </record>
+        <record id="cat_silver_jewelry" model="gold.category">
+            <field name="name">Silver Jewelry</field>
+        </record>
+        <record id="cat_diamond_jewelry" model="gold.category">
+            <field name="name">Diamond Jewelry</field>
+        </record>
+        <record id="cat_platinum_jewelry" model="gold.category">
+            <field name="name">Platinum Jewelry</field>
+        </record>
+        <record id="cat_coins" model="gold.category">
+            <field name="name">Gold &amp; Silver Coins</field>
+        </record>
+        <record id="cat_accessories" model="gold.category">
+            <field name="name">Jewelry Accessories</field>
+        </record>
+    </data>
+</odoo>
