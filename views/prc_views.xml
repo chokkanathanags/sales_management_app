@@ -4,14 +4,20 @@
         <field name="name">gold.rate.tree</field>
         <field name="model">gold.rate</field>
         <field name="arch" type="xml">
-            <tree string="Gold Rates" decoration-muted="not active" decoration-bf="active">
-                <field name="effective_date"/>
+            <tree string="Gold Rates" 
+                  decoration-info="state == 'draft'" 
+                  decoration-success="state == 'active'" 
+                  decoration-muted="state == 'deprecated'">
                 <field name="name"/>
                 <field name="metal_type"/>
                 <field name="karat"/>
-                <field name="price_per_gram" string="Rate/g" decoration-bf="1"/>
-                <field name="price_per_10g" string="Rate/10g"/>
-                <field name="rate_source" widget="badge"/>
+                <field name="price_per_gram"/>
+                <field name="effective_date"/>
+                <field name="rate_source"/>
+                <field name="state" widget="badge" 
+                       decoration-info="state == 'draft'" 
+                       decoration-success="state == 'active'" 
+                       decoration-muted="state == 'deprecated'"/>
                 <field name="active" widget="boolean_toggle"/>
             </tree>
         </field>
@@ -21,53 +27,61 @@
         <field name="name">gold.rate.form</field>
         <field name="model">gold.rate</field>
         <field name="arch" type="xml">
-            <form string="Gold Rate" class="tab-pricing-accent">
+            <form string="Gold Rate">
+                <header>
+                    <button name="action_activate" string="Activate Rate" type="object" class="btn-success" invisible="state != 'draft'"/>
+                    <button name="action_deprecate" string="Deprecate" type="object" class="btn-secondary" invisible="state != 'active'"/>
+                    <button name="action_draft" string="Reset to Draft" type="object" invisible="state != 'deprecated'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,deprecated"/>
+                </header>
                 <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Rate Ref / Name"/>
+                        <h1><field name="name" placeholder="e.g. 22K Standard Rate - Mumbai"/></h1>
+                    </div>
+                    <group>
+                        <group string="Metal Characteristics">
+                            <field name="metal_type"/>
+                            <field name="karat"/>
+                            <field name="purity_factor"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Pricing (INR)">
+                            <field name="price_per_gram"/>
+                            <field name="price_per_10g" class="oe_read_only"/>
+                            <field name="price_per_tola" class="oe_read_only"/>
+                        </group>
+                    </group>
                     <notebook>
-                        <page string="Rate Details" name="details">
-                            <group>
-                                <group string="Basic Info">
-                                    <field name="name" placeholder="e.g. Daily Market Rate - 22K (916)"/>
-                                    <field name="code" placeholder="e.g. GOLD-22K-DAILY"/>
-                                    <field name="metal_type" placeholder="e.g. Gold, Silver, Platinum"/>
-                                    <field name="karat" placeholder="e.g. 22K, 24K, 18K"/>
-                                    <field name="purity_factor" placeholder="e.g. 0.916"/>
-                                </group>
-                                <group string="Current Price">
-                                    <field name="price_per_gram" placeholder="e.g. 6250.00"/>
-                                    <field name="price_per_10g" placeholder="e.g. 62500.00"/>
-                                    <field name="price_per_tola" placeholder="e.g. 72900.00"/>
-                                    <field name="rate_source" placeholder="e.g. Dubai Gold Market, Local Bullion"/>
-                                    <field name="region" placeholder="e.g. Bangalore, KA"/>
-                                    <field name="active"/>
-                                </group>
-                            </group>
-                        </page>
-                        <page string="Price Components" name="components">
+                        <page string="Price Breakdown" name="breakdown">
                             <group>
                                 <group string="Charges &amp; Wastage">
-                                    <field name="making_charge_fixed" placeholder="e.g. 150.00"/>
-                                    <field name="making_charge_pct" placeholder="e.g. 12.0 (%)"/>
-                                    <field name="wastage_pct" placeholder="e.g. 3.5 (%)"/>
+                                    <field name="making_charge_fixed"/>
+                                    <field name="making_charge_pct"/>
+                                    <field name="wastage_pct"/>
                                 </group>
                                 <group string="Taxation (%)">
-                                    <field name="gst_gold" placeholder="e.g. 3.0 (%)"/>
-                                    <field name="gst_making" placeholder="e.g. 5.0 (%)"/>
-                                    <field name="gst_diamond" placeholder="e.g. 18.0 (%)"/>
+                                    <field name="gst_gold"/>
+                                    <field name="gst_making"/>
+                                    <field name="gst_diamond"/>
                                 </group>
                             </group>
                         </page>
-                        <page string="Validity &amp; Notes" name="validity">
+                        <page string="Source &amp; Validity" name="validity">
                             <group>
-                                <group string="Dates">
+                                <group string="Effective Dates">
                                     <field name="effective_date"/>
                                     <field name="expiry_date"/>
                                 </group>
-                                <group string="Pricelist">
+                                <group string="Origin">
+                                    <field name="rate_source"/>
+                                    <field name="region" placeholder="e.g. Maharashtra"/>
                                     <field name="pricelist_id"/>
                                 </group>
                             </group>
-                            <field name="description" placeholder="Add specific details about the source of this rate..."/>
+                        </page>
+                        <page string="Internal Notes" name="description">
+                            <field name="description" placeholder="Internal justification or notes..."/>
                         </page>
                     </notebook>
                 </sheet>

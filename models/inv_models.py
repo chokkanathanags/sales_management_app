@@ -78,8 +78,10 @@ class GoldInventory(models.Model):
 
     # Status
     state = fields.Selection([
+        ('draft', 'Draft'),
         ('available', 'Available'),
         ('reserved', 'Reserved'),
+        ('sold', 'Sold'),
         ('in_transit', 'In Transit'),
         ('in_production', 'In Production'),
         ('on_order', 'On Order'),
@@ -88,9 +90,37 @@ class GoldInventory(models.Model):
         ('return_pool', 'Return/Exchange Pool'),
         ('consignment', 'Consignment'),
         ('inactive', 'Inactive'),
-    ], string='Status', default='available', index=True)
+    ], string='Status', default='draft', index=True)
     is_consignment = fields.Boolean(string='Consignment Item')
     consignment_partner = fields.Char(string='Consignment Partner')
+
+    def action_draft(self):
+        for rec in self:
+            rec.state = 'draft'
+
+    def action_available(self):
+        for rec in self:
+            rec.state = 'available'
+
+    def action_reserve(self):
+        for rec in self:
+            rec.state = 'reserved'
+
+    def action_sell(self):
+        for rec in self:
+            rec.state = 'sold'
+
+    def action_mark_damaged(self):
+        for rec in self:
+            rec.state = 'damaged'
+
+    def action_quality_check(self):
+        for rec in self:
+            rec.state = 'quality_check'
+
+    def action_deactivate(self):
+        for rec in self:
+            rec.state = 'inactive'
 
     # Financials
     making_charge = fields.Float(string='Making Charge', default=0.0)
@@ -140,11 +170,19 @@ class GoldInventory(models.Model):
             if rec.net_weight > rec.gross_weight:
                 raise ValidationError("Net weight cannot be greater than gross weight.")
 
-    @api.constrains('base_value', 'total_value')
-    def _check_values(self):
+    @api.constrains('gross_weight', 'net_weight')
+    def _check_weights(self):
         for rec in self:
-            if rec.base_value < 0 or rec.total_value < 0:
-                raise ValidationError("Value fields (Base/Total) cannot be negative.")
+            if rec.gross_weight < 0 or rec.net_weight < 0:
+                raise ValidationError("Weight values cannot be negative.")
+            if rec.net_weight > rec.gross_weight:
+                raise ValidationError("Net weight cannot be greater than gross weight.")
+
+    @api.constrains('karat')
+    def _check_karat(self):
+        for rec in self:
+            if rec.type == 'gold' and not rec.karat:
+                raise ValidationError("Karat must be specified for gold items.")
 
 
 class GoldInventoryTransfer(models.Model):

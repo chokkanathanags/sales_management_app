@@ -95,10 +95,46 @@ class GoldCustomer(models.Model):
 
     # Status
     state = fields.Selection([
+        ('prospect', 'Prospect'),
         ('active', 'Active'),
+        ('vip', 'VIP'),
         ('inactive', 'Inactive'),
         ('blacklisted', 'Blacklisted'),
-    ], string='Status', default='active', tracking=True)
+    ], string='Status', default='prospect', index=True)
+
+    def action_activate(self):
+        for rec in self:
+            rec.state = 'active'
+
+    def action_make_vip(self):
+        for rec in self:
+            rec.state = 'vip'
+
+    def action_deactivate(self):
+        for rec in self:
+            rec.state = 'inactive'
+
+    def action_blacklist(self):
+        for rec in self:
+            rec.state = 'blacklisted'
+
+    # Stat Buttons Data
+    order_count = fields.Integer(string='Order Count', compute='_compute_order_count')
+
+    def _compute_order_count(self):
+        for rec in self:
+            rec.order_count = self.env['gold.purchase'].search_count([('customer_id', '=', rec.id)])
+
+    def action_view_orders(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Orders',
+            'view_mode': 'tree,form',
+            'res_model': 'gold.purchase',
+            'domain': [('customer_id', '=', self.id)],
+            'context': {'default_customer_id': self.id},
+        }
     code = fields.Char(string='Customer Code')
     description = fields.Text(string='Notes')
     category = fields.Char(string='Category')

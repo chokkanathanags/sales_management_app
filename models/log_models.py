@@ -85,6 +85,30 @@ class GoldLogistics(models.Model):
         ('return_in_transit', 'Return In Transit'),
         ('return_delivered', 'Return Delivered'),
     ], string='Tracking Status', default='label_created', index=True)
+
+    def action_picked_up(self):
+        for rec in self:
+            rec.write({'status': 'picked_up', 'pickup_date': fields.Date.today()})
+
+    def action_in_transit(self):
+        for rec in self:
+            rec.write({'status': 'in_transit'})
+
+    def action_out_for_delivery(self):
+        for rec in self:
+            rec.write({'status': 'out_for_delivery'})
+
+    def action_delivered(self):
+        for rec in self:
+            rec.write({'status': 'delivered', 'actual_delivery': fields.Datetime.now()})
+            # Link back to order if needed
+            if rec.order_id:
+                rec.order_id.write({'state': 'delivered', 'delivery_date': fields.Datetime.now()})
+
+    def action_failed(self):
+        for rec in self:
+            rec.status = 'delivery_failed'
+
     state = fields.Selection([
         ('draft', 'Draft'),
         ('dispatched', 'Dispatched'),

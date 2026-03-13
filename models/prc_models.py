@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 
 class GoldRate(models.Model):
@@ -52,6 +53,25 @@ class GoldRate(models.Model):
                 raise ValidationError("Expiry date must be after the effective date.")
     region = fields.Char(string='Region (for regional rates)')
 
+    # Status
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('deprecated', 'Deprecated'),
+    ], string='Status', default='draft', index=True)
+
+    def action_activate(self):
+        for rec in self:
+            rec.state = 'active'
+
+    def action_deprecate(self):
+        for rec in self:
+            rec.state = 'deprecated'
+
+    def action_draft(self):
+        for rec in self:
+            rec.state = 'draft'
+
     # Price Components
     making_charge_fixed = fields.Float(string='Making Charge (Fixed)')
     making_charge_pct = fields.Float(string='Making Charge (%)')
@@ -59,6 +79,12 @@ class GoldRate(models.Model):
     gst_gold = fields.Float(string='GST on Gold (%)', default=3.0)
     gst_making = fields.Float(string='GST on Making (%)', default=5.0)
     gst_diamond = fields.Float(string='GST on Diamond (%)', default=18.0)
+
+    @api.constrains('price_per_gram')
+    def _check_price(self):
+        for rec in self:
+            if rec.price_per_gram <= 0:
+                raise ValidationError("Price per gram must be greater than zero.")
 
     # Price List
     pricelist_id = fields.Many2one('gold.pricelist', string='Price List')
@@ -68,6 +94,7 @@ class GoldRate(models.Model):
         for rec in self:
             if rec.price_per_gram <= 0:
                 raise ValidationError("Price per gram must be greater than zero.")
+    @api.depends('price_per_gram')
     def _compute_rates(self):
         for rec in self:
             rec.price_per_10g = rec.price_per_gram * 10

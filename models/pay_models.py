@@ -75,6 +75,25 @@ class GoldPayment(models.Model):
         ('reconciled', 'Reconciled'),
     ], string='Payment Status', default='initiated', index=True, tracking=True)
 
+    def action_confirm_success(self):
+        for rec in self:
+            rec.write({'state': 'success', 'payment_date': fields.Datetime.now()})
+            # Link back to order if needed
+            if rec.order_id:
+                rec.order_id.write({'payment_status': 'paid'})
+
+    def action_set_pending(self):
+        for rec in self:
+            rec.state = 'pending'
+
+    def action_set_failed(self):
+        for rec in self:
+            rec.state = 'failed'
+
+    def action_reconcile(self):
+        for rec in self:
+            rec.write({'state': 'reconciled', 'is_reconciled': True, 'reconciliation_date': fields.Date.today()})
+
     # Reconciliation
     is_reconciled = fields.Boolean(string='Reconciled', default=False)
     reconciliation_date = fields.Date(string='Reconciliation Date')

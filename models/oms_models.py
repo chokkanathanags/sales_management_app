@@ -153,6 +153,24 @@ class GoldPurchase(models.Model):
                 continue
             rec.write({'state': 'confirmed', 'confirmation_date': fields.Datetime.now()})
 
+    def action_quality_check(self):
+        for rec in self:
+            rec.write({'state': 'quality_check'})
+
+    def action_packed(self):
+        for rec in self:
+            rec.write({'state': 'packed'})
+
+    def action_dispatch(self):
+        for rec in self:
+            rec.write({'state': 'dispatched', 'dispatch_date': fields.Datetime.now()})
+
+    def action_delivered(self):
+        for rec in self:
+            if rec.state not in ('dispatched', 'in_transit', 'out_for_delivery'):
+                raise ValidationError("Order must be dispatched before it can be marked as delivered.")
+            rec.write({'state': 'delivered', 'delivery_date': fields.Datetime.now()})
+
     def action_cancel(self):
         for rec in self:
             if rec.state in ('delivered', 'cancelled'):
@@ -162,12 +180,6 @@ class GoldPurchase(models.Model):
     def action_set_to_draft(self):
         for rec in self:
             rec.write({'state': 'draft'})
-
-    def action_delivered(self):
-        for rec in self:
-            if rec.state != 'dispatched':
-                raise ValidationError("Order must be dispatched before it can be marked as delivered.")
-            rec.write({'state': 'delivered', 'delivery_date': fields.Datetime.now()})
 
 
 class GoldPurchaseLine(models.Model):

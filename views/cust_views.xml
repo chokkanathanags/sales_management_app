@@ -15,101 +15,90 @@
             </tree>
         </field>
     </record>
-
     <record id="view_gold_customer_form" model="ir.ui.view">
         <field name="name">gold.customer.form</field>
         <field name="model">gold.customer</field>
         <field name="arch" type="xml">
             <form string="Customer">
                 <header>
-                    <field name="state" widget="statusbar" statusbar_visible="active,inactive,blacklisted" options="{'clickable': '1'}"/>
+                    <button name="action_activate" string="Activate" type="object" class="btn-primary" invisible="state != 'prospect'"/>
+                    <button name="action_make_vip" string="Mark as VIP" type="object" class="btn-warning" invisible="state != 'active'"/>
+                    <button name="action_deactivate" string="Deactivate" type="object" invisible="state not in ['active', 'vip']"/>
+                    <button name="action_blacklist" string="Blacklist" type="object" class="btn-danger" invisible="state == 'blacklisted'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="prospect,active,vip"/>
                 </header>
                 <sheet>
-                    <widget name="web_ribbon" title="Blacklisted" bg_color="text-bg-danger" invisible="state != 'blacklisted'"/>
-                    <widget name="web_ribbon" title="Inactive" bg_color="text-bg-warning" invisible="state != 'inactive'"/>
-                    
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_view_payments" type="object" class="oe_stat_button" icon="fa-money">
-                            <field name="payment_count" widget="statinfo" string="Payments"/>
+                        <button name="action_view_orders" type="object" class="oe_stat_button" icon="fa-shopping-cart">
+                            <field name="order_count" string="Orders" widget="statinfo"/>
                         </button>
                     </div>
                     <field name="image" widget="image" class="oe_avatar" options='{"preview_image": "image"}'/>
                     <div class="oe_title">
-                        <label for="name" class="oe_edit_only" string="Customer Name"/>
-                        <h1><field name="name" placeholder="e.g. John Doe" class="oe_inline"/></h1>
-                        <div class="o_row">
-                            <field name="segment" widget="badge" decoration-info="segment == 'regular'" decoration-warning="segment == 'gold'" decoration-success="segment == 'platinum'" class="ms-1"/>
-                        </div>
-                        <h3><field name="code" readonly="1" class="text-muted"/></h3>
+                        <label for="name" string="Customer Name"/>
+                        <h1><field name="name" placeholder="e.g. John Doe"/></h1>
+                        <label for="unique_customer_id" string="Customer Global ID"/>
+                        <h2><field name="unique_customer_id" placeholder="Gold-ID-XXXXX"/></h2>
                     </div>
                     <group>
-                        <group string="Primary Contact Details">
-                            <field name="email" widget="email" placeholder="john.doe@example.com" required="1"/>
-                            <field name="mobile" widget="phone" placeholder="+91 98765 43210" required="1"/>
-                            <field name="partner_id" options="{'no_create': True}" groups="base.group_no_one"/>
+                        <group string="Primary Contact">
+                            <field name="mobile" widget="phone" placeholder="+91 XXXX-XXXXXX"/>
+                            <field name="email" widget="email" placeholder="customer@email.com"/>
+                            <field name="partner_id" placeholder="Link to system partner"/>
                         </group>
-                        <group string="Account Preferences">
-                            <field name="preferred_store" placeholder="Select store location"/>
-                            <field name="karat" placeholder="e.g. 22K, 24K"/>
-                            <field name="language" placeholder="English, Hindi, etc."/>
+                        <group string="Segmentation">
+                            <field name="segment" widget="radio" options="{'horizontal': true}"/>
+                            <field name="preferred_store"/>
+                            <field name="active" widget="boolean_toggle"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Detailed Profile" name="profile">
+                        <page string="Profile &amp; Personal" name="profile">
                             <group>
-                                <group string="Personal Info">
-                                    <label for="first_name" string="Full Name"/>
-                                    <div class="o_row">
-                                        <field name="first_name" placeholder="First Name"/>
-                                        <field name="last_name" placeholder="Last Name"/>
-                                    </div>
-                                    <field name="date_of_birth" placeholder="Select DOB"/>
-                                    <field name="anniversary_date" placeholder="Select Anniversary"/>
-                                    <field name="gender" widget="radio" options="{'horizontal': true}"/>
-                                    <field name="occupation" placeholder="e.g. Professional"/>
+                                <group string="Demographics">
+                                    <field name="first_name"/>
+                                    <field name="last_name"/>
+                                    <field name="gender"/>
+                                    <field name="date_of_birth"/>
+                                    <field name="anniversary_date"/>
                                 </group>
-                                <group string="Legal / Corporate">
-                                    <field name="company_name" placeholder="Business Name"/>
-                                    <field name="gst_number" placeholder="22AAAAA0000A1Z5"/>
-                                    <field name="pan_number" placeholder="ABCDE1234F"/>
-                                    <field name="aadhaar_number" placeholder="12 Digit ID"/>
-                                    <field name="credit_limit" widget="monetary" options="{'currency_field': 'currency_name'}"/>
+                                <group string="KYC &amp; Identity">
+                                    <field name="pan_number" placeholder="Enter PAN"/>
+                                    <field name="gst_number" placeholder="Enter GST if corporate"/>
+                                    <field name="aadhaar_number"/>
                                 </group>
                             </group>
                         </page>
-                        <page string="Logistics &amp; Finance" name="addresses">
+                        <page string="Transactions &amp; Analytics" name="analytics">
                             <group>
-                                <group string="Shipping Information">
-                                    <field name="shipping_address" nolabel="1" placeholder="Street, City, Pincode..."/>
-                                </group>
-                                <group string="Billing Information">
-                                    <field name="billing_address" nolabel="1" placeholder="Same as shipping or separate..."/>
-                                </group>
-                            </group>
-                        </page>
-                        <page string="Analytics &amp; Loyalty" name="analytics">
-                            <group>
-                                <group string="Communication Settings">
-                                    <field name="comm_email" widget="boolean_toggle"/>
-                                    <field name="comm_sms" widget="boolean_toggle"/>
-                                    <field name="comm_whatsapp" widget="boolean_toggle"/>
-                                    <field name="consent_marketing" widget="boolean_toggle"/>
-                                </group>
-                                <group string="Purchase Insights">
-                                    <field name="registration_date" readonly="1"/>
-                                    <field name="last_purchase_date" readonly="1"/>
-                                    <field name="total_purchase_count" readonly="1"/>
-                                    <field name="total_purchase_value" widget="monetary" readonly="1"/>
-                                    <field name="avg_order_value" widget="monetary" readonly="1"/>
-                                    <field name="clv" widget="monetary" string="Lifetime Value (CLV)" readonly="1"/>
-                                </group>
-                            </group>
-                            <group string="Reward Balance">
-                                <group>
-                                    <field name="loyalty_points" decoration-bf="1" decoration-success="loyalty_points &gt; 0"/>
+                                <group string="Loyalty Program">
+                                    <field name="loyalty_points" decoration-bf="1" decoration-info="1"/>
                                     <field name="loyalty_points_lifetime"/>
                                 </group>
+                                <group string="Purchase Summary">
+                                    <field name="total_purchase_value" widget="monetary" options="{'currency_field': 'currency_name'}"/>
+                                    <field name="last_purchase_date"/>
+                                    <field name="avg_order_value" widget="monetary"/>
+                                    <field name="currency_name" invisible="1"/>
+                                </group>
                             </group>
+                        </page>
+                        <page string="Communication &amp; Saved Loc" name="logistics">
+                            <group>
+                                <group string="Delivery Addresses">
+                                    <field name="shipping_address" placeholder="Main shipping address..."/>
+                                    <field name="billing_address" placeholder="Billing address if different..."/>
+                                </group>
+                                <group string="Preferences">
+                                    <field name="comm_email"/>
+                                    <field name="comm_sms"/>
+                                    <field name="comm_whatsapp"/>
+                                    <field name="language"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Internal Notes" name="description">
+                            <field name="description" placeholder="Internal relationship notes..."/>
                         </page>
                         <page string="Internal Log" name="notes">
                             <field name="description" placeholder="Confidential customer notes..."/>
@@ -129,8 +118,7 @@
         <field name="name">gold.customer.kanban</field>
         <field name="model">gold.customer</field>
         <field name="arch" type="xml">
-            <kanban class="o_kanban_mobile" sample="1">
-                <field name="id"/>
+            <kanban class="o_kanban_mobile" default_group_by="state">
                 <field name="name"/>
                 <field name="mobile"/>
                 <field name="email"/>
@@ -138,31 +126,31 @@
                 <field name="image"/>
                 <field name="total_purchase_value"/>
                 <field name="currency_name"/>
+                <field name="loyalty_points"/>
+                <field name="state"/>
                 <templates>
                     <t t-name="kanban-box">
-                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">
-                            <t t-if="record.image.raw_value">
-                                <div class="o_kanban_image_fill_left d-none d-md-block"
-                                     t-attf-style="background-image:url('#{kanban_image('gold.customer', 'image', record.id.raw_value)}')"/>
-                            </t>
-                            <t t-else="">
-                                <div class="o_kanban_image_fill_left d-none d-md-block fa fa-user" style="font-size: 40px; text-align: center; line-height: 100px; color: #ccc;"/>
-                            </t>
+                        <div class="oe_kanban_global_click o_kanban_record">
+                            <div class="o_kanban_image">
+                                <field name="image" widget="image" class="oe_avatar" options="{'zoom': true, 'background': true, 'prevent_create': true}"/>
+                            </div>
                             <div class="oe_kanban_details">
                                 <strong class="o_kanban_record_title"><field name="name"/></strong>
                                 <div class="o_kanban_record_subtitle">
-                                    <field name="segment" widget="badge" decoration-info="segment == 'regular'" decoration-warning="segment == 'gold'" decoration-success="segment == 'platinum'"/>
+                                    <field name="mobile"/>
                                 </div>
-                                <div class="o_kanban_record_body">
-                                    <div t-if="record.email.raw_value"><i class="fa fa-envelope" role="img" aria-label="Email"/> <field name="email"/></div>
-                                    <div t-if="record.mobile.raw_value"><i class="fa fa-phone" role="img" aria-label="Phone"/> <field name="mobile"/></div>
+                                <div>
+                                    <span class="badge badge-pill badge-primary"><field name="segment"/></span>
                                 </div>
-                                <div class="o_kanban_record_bottom mt-2">
+                                <div class="mt-2 text-primary font-weight-bold">
+                                    <field name="total_purchase_value" widget="monetary" options="{'currency_field': 'currency_name'}"/>
+                                </div>
+                                <div class="o_kanban_record_bottom">
                                     <div class="oe_kanban_bottom_left">
-                                        <field name="state" widget="label_selection" options="{'classes': {'active': 'success', 'inactive': 'info', 'blacklisted': 'danger'}}"/>
+                                        <field name="loyalty_points" widget="integer"/> Points
                                     </div>
                                     <div class="oe_kanban_bottom_right">
-                                        <span class="fw-bold"><field name="total_purchase_value" widget="monetary"/></span>
+                                        <field name="state" widget="label_selection" options="{'classes': {'prospect': 'info', 'active': 'success', 'vip': 'warning', 'blacklisted': 'danger'}}"/>
                                     </div>
                                 </div>
                             </div>
@@ -189,22 +177,20 @@
         <field name="model">gold.customer</field>
         <field name="arch" type="xml">
             <search string="Search Customers">
-                <field name="name" string="Customer" filter_domain="['|', '|', ('name', 'ilike', self), ('email', 'ilike', self), ('code', 'ilike', self)]"/>
-                <field name="mobile"/>
-                <field name="email"/>
+                <field name="name" filter_domain="['|', '|', ('name', 'ilike', self), ('mobile', 'ilike', self), ('email', 'ilike', self)]" string="Name/Mobile/Email"/>
+                <field name="unique_customer_id"/>
                 <field name="segment"/>
                 <field name="state"/>
+                
                 <separator/>
-                <filter name="active_custs" string="Active Customers" domain="[('state', '=', 'active')]"/>
-                <filter name="blacklisted" string="Blacklisted" domain="[('state', '=', 'blacklisted')]"/>
-                <separator/>
-                <filter name="premium" string="Gold/Platinum/VIP" domain="[('segment', 'in', ['gold', 'platinum', 'vip', 'diamond'])]"/>
-                <filter name="reg_today" string="Registered Today" domain="[('registration_date', '&gt;=', datetime.datetime.now().strftime('%Y-%m-%d 00:00:00')), ('registration_date', '&lt;=', datetime.datetime.now().strftime('%Y-%m-%d 23:59:59'))]"/>
+                <filter name="active_only" string="Active Customers" domain="[('state', '=', 'active')]"/>
+                <filter name="vip_only" string="VIP Customers" domain="[('state', '=', 'vip')]"/>
+                <filter name="high_value" string="High Value (>50k)" domain="[('total_purchase_value', '>', 50000)]"/>
+                
                 <group expand="0" string="Group By">
-                    <filter name="group_by_segment" string="Segment" context="{'group_by': 'segment'}"/>
                     <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_by_segment" string="Segment/Tier" context="{'group_by': 'segment'}"/>
                     <filter name="group_by_store" string="Preferred Store" context="{'group_by': 'preferred_store'}"/>
-                    <filter name="group_by_reg_month" string="Registration Month" context="{'group_by': 'registration_date:month'}"/>
                 </group>
             </search>
         </field>

@@ -133,6 +133,43 @@ class GoldReturns(models.Model):
         ('rejected', 'Rejected'),
     ], string='Return Status', default='draft', index=True)
 
+    def action_submit(self):
+        for rec in self:
+            rec.state = 'submitted'
+
+    def action_approve(self):
+        for rec in self:
+            rec.write({'state': 'approved', 'approval_date': fields.Datetime.now()})
+
+    def action_receive(self):
+        for rec in self:
+            rec.write({'state': 'received', 'return_received_date': fields.Datetime.now()})
+
+    def action_qc_pass(self):
+        for rec in self:
+            rec.write({'state': 'qc_passed', 'qc_status': 'passed'})
+
+    def action_qc_fail(self):
+        for rec in self:
+            rec.write({'state': 'qc_failed', 'qc_status': 'failed_damaged'})
+
+    def action_initiate_refund(self):
+        for rec in self:
+            rec.write({'state': 'refund_initiated', 'refund_state': 'approved'})
+
+    def action_complete(self):
+        for rec in self:
+            rec.write({
+                'state': 'completed', 
+                'completion_date': fields.Datetime.now(),
+                'refund_state': 'processed',
+                'refund_date': fields.Datetime.now()
+            })
+
+    def action_cancel(self):
+        for rec in self:
+            rec.state = 'cancelled'
+
     # Dates
     initiation_date = fields.Datetime(string='Return Initiated On', default=fields.Datetime.now)
     approval_date = fields.Datetime(string='Approved On')
