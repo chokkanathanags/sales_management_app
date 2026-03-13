@@ -1,4 +1,6 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
+import re
 
 
 class GoldCustomer(models.Model):
@@ -17,9 +19,9 @@ class GoldCustomer(models.Model):
     image = fields.Binary(string='Profile Photo')
 
     # Contact
-    mobile = fields.Char(string='Mobile (Primary)', index=True)
+    mobile = fields.Char(string='Mobile (Primary)', required=True, index=True)
     mobile_verified = fields.Boolean(string='Mobile OTP Verified')
-    email = fields.Char(string='Email', index=True)
+    email = fields.Char(string='Email', required=True, index=True)
     email_verified = fields.Boolean(string='Email Verified')
 
     # Personal Info
@@ -117,3 +119,23 @@ class GoldCustomer(models.Model):
     tax_amount = fields.Float(string='Tax Amount')
     currency_name = fields.Char(string='Currency', default='INR')
     type = fields.Char(string='Type')
+
+    @api.constrains('email')
+    def _check_email_format(self):
+        for rec in self:
+            if rec.email:
+                if not re.match(r"[^@]+@[^@]+\.[^@]+", rec.email):
+                    raise ValidationError("Please enter a valid email address (e.g., customer@example.com).")
+
+    @api.constrains('mobile')
+    def _check_mobile_format(self):
+        for rec in self:
+            if rec.mobile:
+                if not rec.mobile.isdigit() or len(rec.mobile) < 10:
+                    raise ValidationError("Please enter a valid mobile number with at least 10 digits.")
+
+    @api.constrains('date_of_birth')
+    def _check_date_of_birth(self):
+        for rec in self:
+            if rec.date_of_birth and rec.date_of_birth > fields.Date.today():
+                raise ValidationError("Date of birth cannot be in the future.")

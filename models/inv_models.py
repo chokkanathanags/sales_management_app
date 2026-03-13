@@ -10,7 +10,7 @@ class GoldInventory(models.Model):
 
     # Basic Info
     name = fields.Char(string='Reference', required=True, default='New', copy=False)
-    sku = fields.Char(string='SKU', copy=False, index=True)
+    sku = fields.Char(string='SKU', required=True, copy=False, index=True)
     serial_number = fields.Char(string='Serial Number (Unique)', copy=False, index=True)
     barcode = fields.Char(string='Barcode (EAN-13/Code128/QR)', copy=False, index=True)
     rfid_tag = fields.Char(string='RFID Tag', copy=False)
@@ -20,7 +20,7 @@ class GoldInventory(models.Model):
     notes = fields.Text(string='Internal Notes')
 
     # Classification
-    category = fields.Char(string='Category')
+    category = fields.Char(string='Category', required=True)
     type = fields.Selection([
         ('gold', 'Gold'),
         ('silver', 'Silver'),
@@ -113,6 +113,18 @@ class GoldInventory(models.Model):
                 domain = [('serial_number', '=', rec.serial_number), ('id', '!=', rec.id)]
                 if self.search_count(domain) > 0:
                     raise ValidationError(f"Serial number '{rec.serial_number}' already exists!")
+
+    @api.constrains('quantity')
+    def _check_quantity(self):
+        for rec in self:
+            if rec.quantity < 0:
+                raise ValidationError("Inventory quantity cannot be negative.")
+
+    @api.constrains('base_value', 'total_value')
+    def _check_values(self):
+        for rec in self:
+            if rec.base_value < 0 or rec.total_value < 0:
+                raise ValidationError("Value fields (Base/Total) cannot be negative.")
 
 
 class GoldInventoryTransfer(models.Model):

@@ -38,18 +38,18 @@
                         <h2><field name="sku" placeholder="SKU Code"/></h2>
                     </div>
                     <group>
-                        <group string="Identification">
-                            <field name="serial_number"/>
-                            <field name="barcode"/>
-                            <field name="rfid_tag"/>
-                            <field name="lot_number"/>
+                        <group string="Tracking Codes">
+                            <field name="serial_number" placeholder="Enter unique serial number"/>
+                            <field name="barcode" placeholder="Scan or enter barcode"/>
+                            <field name="rfid_tag" placeholder="RFID Tag ID"/>
+                            <field name="lot_number" placeholder="Batch/Lot reference"/>
                         </group>
-                        <group string="Classification">
-                            <field name="category"/>
-                            <field name="collection"/>
+                        <group string="Product Classification">
+                            <field name="category" placeholder="e.g. Rings, Necklaces"/>
+                            <field name="collection" placeholder="e.g. Summer 2024"/>
                             <field name="type"/>
                             <field name="karat"/>
-                            <field name="purity"/>
+                            <field name="purity" placeholder="e.g. 91.6"/>
                         </group>
                     </group>
                     <group>
@@ -59,12 +59,12 @@
                             <field name="stone_weight"/>
                             <field name="manufacture_date"/>
                         </group>
-                        <group string="Location">
-                            <field name="warehouse"/>
-                            <field name="store_location"/>
-                            <field name="bin_location"/>
+                        <group string="Storage Details">
+                            <field name="warehouse" placeholder="Enter Warehouse Name"/>
+                            <field name="store_location" placeholder="Sub-location/Section"/>
+                            <field name="bin_location" placeholder="Specific Bin/Shelf"/>
                             <field name="is_consignment"/>
-                            <field name="consignment_partner" invisible="is_consignment == False"/>
+                            <field name="consignment_partner" invisible="is_consignment == False" placeholder="Partner Name"/>
                         </group>
                     </group>
                     <group>

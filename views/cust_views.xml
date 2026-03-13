@@ -29,21 +29,21 @@
                 <sheet>
                     <field name="image" widget="image" class="oe_avatar" options='{"preview_image": "image"}'/>
                     <div class="oe_title">
-                        <label for="name" string="Customer Name"/>
-                        <h1><field name="name" placeholder="E.g. John Doe"/></h1>
+                        <label for="name" class="oe_edit_only" string="Customer Name"/>
+                        <h1><field name="name" placeholder="Enter customer full name (e.g. John Doe)"/></h1>
                         <label for="code" string="Customer Code"/>
                         <h2><field name="code" readonly="1"/></h2>
                     </div>
                     <group>
-                        <group string="Identity &amp; Contact">
-                            <field name="first_name"/>
-                            <field name="last_name"/>
-                            <field name="mobile"/>
-                            <field name="email"/>
-                            <field name="partner_id"/>
+                        <group string="Basic Contact Information">
+                            <field name="first_name" placeholder="e.g. John"/>
+                            <field name="last_name" placeholder="e.g. Doe"/>
+                            <field name="mobile" placeholder="Enter valid mobile number (e.g. 9876543210)"/>
+                            <field name="email" placeholder="Enter customer email address (e.g. john.doe@example.com)"/>
+                            <field name="partner_id" options="{'no_create': True}"/>
                         </group>
-                        <group string="Segmentation">
-                            <field name="segment"/>
+                        <group string="Account Segmentation">
+                            <field name="segment" widget="radio" options="{'horizontal': true}"/>
                             <field name="category"/>
                             <field name="preferred_store"/>
                             <field name="type"/>
@@ -68,8 +68,12 @@
                         </page>
                         <page string="Addresses">
                             <group>
-                                <field name="shipping_address"/>
-                                <field name="billing_address"/>
+                                <group string="Logistics">
+                                    <field name="shipping_address" placeholder="Enter full shipping address..."/>
+                                </group>
+                                <group string="Finance">
+                                    <field name="billing_address" placeholder="Enter billing address (if different)..."/>
+                                </group>
                             </group>
                         </page>
                         <page string="Preferences &amp; Analytics">

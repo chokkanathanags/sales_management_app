@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 
 class GoldPurchase(models.Model):
@@ -8,8 +9,8 @@ class GoldPurchase(models.Model):
     _order = 'order_date desc'
 
     name = fields.Char(string='Order Reference', required=True, default='New', copy=False, index=True)
-    partner_id = fields.Many2one('res.partner', string='Customer')
-    customer_id = fields.Many2one('gold.customer', string='Gold Customer')
+    partner_id = fields.Many2one('res.partner', string='Customer', required=True)
+    customer_id = fields.Many2one('gold.customer', string='Gold Customer', required=True)
     active = fields.Boolean(string='Active', default=True)
 
     # Source
@@ -140,6 +141,34 @@ class GoldPurchase(models.Model):
     external_order_id = fields.Char(string='External Order ID', copy=False)
     api_idempotency_key = fields.Char(string='API Idempotency Key', copy=False)
 
+    @api.constrains('total_value')
+    def _check_total_value(self):
+        for rec in self:
+            if rec.total_value < 0:
+                raise ValidationError("Total order value cannot be negative.")
+
+    def action_confirm(self):
+        for rec in self:
+            if rec.state != 'draft':
+                continue
+            rec.write({'state': 'confirmed', 'confirmation_date': fields.Datetime.now()})
+
+    def action_cancel(self):
+        for rec in self:
+            if rec.state in ('delivered', 'cancelled'):
+                raise ValidationError("Cannot cancel an order that is already delivered or cancelled.")
+            rec.write({'state': 'cancelled', 'cancellation_date': fields.Datetime.now()})
+
+    def action_set_to_draft(self):
+        for rec in self:
+            rec.write({'state': 'draft'})
+
+    def action_delivered(self):
+        for rec in self:
+            if rec.state != 'dispatched':
+                raise ValidationError("Order must be dispatched before it can be marked as delivered.")
+            rec.write({'state': 'delivered', 'delivery_date': fields.Datetime.now()})
+
 
 class GoldPurchaseLine(models.Model):
     _name = 'gold.purchase.line'
@@ -166,3 +195,9 @@ class GoldPurchaseLine(models.Model):
         ('pending', 'Pending'),
         ('cancelled', 'Cancelled'),
     ], string='Line Status', default='pending')
+
+    @api.constrains('quantity')
+    def _check_quantity(self):
+        for rec in self:
+            if rec.quantity <= 0:
+                raise ValidationError("Quantity must be greater than zero.")
