@@ -118,6 +118,16 @@ class GoldInventory(models.Model):
         for rec in self:
             rec.state = 'quality_check'
 
+    def action_approve_qc(self):
+        """Pass QC and make item available for sale"""
+        for rec in self:
+            rec.state = 'available'
+
+    def action_reject_qc(self):
+        """Fail QC and move item to damaged state"""
+        for rec in self:
+            rec.state = 'damaged'
+
     def action_deactivate(self):
         for rec in self:
             rec.state = 'inactive'

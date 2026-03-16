@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 
 class GoldReturns(models.Model):
@@ -11,6 +12,7 @@ class GoldReturns(models.Model):
     name = fields.Char(string='RMA Number', copy=False, index=True, tracking=True, readonly=True)
     order_id = fields.Many2one('gold.purchase', string='Original Order', required=True, tracking=True)
     customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
+    order_line_ids_ref = fields.One2many('gold.purchase.line', related='order_id.order_line_ids', string='Original Order Lines', readonly=True)
     active = fields.Boolean(string='Active', default=True)
 
     @api.model_create_multi
@@ -50,9 +52,19 @@ class GoldReturns(models.Model):
     is_non_returnable = fields.Boolean(string='Non-Returnable Item', default=False)
 
     # Items
+    order_line_id = fields.Many2one('gold.purchase.line', string='Select Purchased Item', domain="[('order_id', '=', order_id)]", tracking=True)
     returned_item_sku = fields.Char(string='Returned Item SKU')
     returned_item_name = fields.Char(string='Returned Item Name')
+    original_qty = fields.Float(string='Original Quantity', readonly=True)
     returned_quantity = fields.Float(string='Returned Quantity', default=1.0)
+
+    @api.onchange('order_line_id')
+    def _onchange_order_line_id(self):
+        if self.order_line_id:
+            self.returned_item_sku = self.order_line_id.sku
+            self.returned_item_name = self.order_line_id.name
+            self.original_qty = self.order_line_id.quantity
+            self.returned_quantity = self.order_line_id.quantity
 
     # Exchange
     exchange_item_sku = fields.Char(string='Exchange Item SKU')
@@ -182,6 +194,12 @@ class GoldReturns(models.Model):
     approval_date = fields.Datetime(string='Approved On')
     completion_date = fields.Datetime(string='Completed On')
     sla_deadline = fields.Date(string='SLA Deadline (7-10 days)')
+
+    @api.constrains('sla_deadline')
+    def _check_sla_deadline(self):
+        for rec in self:
+            if rec.sla_deadline and rec.sla_deadline < fields.Date.today():
+                raise ValidationError("The SLA Deadline cannot be in the past. It must be today or a future date.")
 
     # Old fields for compatibility
     code = fields.Char(string='Code')

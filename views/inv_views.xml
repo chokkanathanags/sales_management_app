@@ -73,11 +73,13 @@
         <field name="arch" type="xml">
             <form string="Inventory Item" class="tab-inventory-accent">
                 <header>
-                    <button name="action_available" string="Make Available" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_available" string="Make Available" type="object" class="btn-primary" invisible="state not in ['draft', 'quality_check']"/>
                     <button name="action_reserve" string="Reserve" type="object" class="btn-info" invisible="state != 'available'"/>
                     <button name="action_sell" string="Mark as Sold" type="object" class="btn-success" invisible="state != 'reserved'"/>
                     <button name="action_quality_check" string="Submit for QC" type="object" class="btn-warning" invisible="state not in ['available', 'draft']"/>
-                    <button name="action_mark_damaged" string="Mark Damaged" type="object" class="btn-danger" invisible="state == 'damaged'"/>
+                    <button name="action_approve_qc" string="Approve (Pass QC)" type="object" class="btn-success" invisible="state != 'quality_check'"/>
+                    <button name="action_reject_qc" string="Reject (Fail QC)" type="object" class="btn-danger" invisible="state != 'quality_check'"/>
+                    <button name="action_mark_damaged" string="Mark Damaged" type="object" class="btn-danger" invisible="state in ['damaged', 'sold']"/>
                     <button name="action_draft" string="Reset to Draft" type="object" invisible="state not in ['inactive', 'damaged']"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,available,reserved,sold"/>
                 </header>

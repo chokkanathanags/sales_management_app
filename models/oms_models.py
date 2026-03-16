@@ -1,5 +1,5 @@
-from odoo import models, fields, api
-from odoo.exceptions import ValidationError
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError, UserError
 
 
 class GoldPurchase(models.Model):
@@ -19,6 +19,12 @@ class GoldPurchase(models.Model):
             if not vals.get('name'):
                 vals['name'] = self.env['ir.sequence'].next_by_code('gold.purchase.seq') or 'New'
         return super(GoldPurchase, self).create(vals_list)
+
+    def unlink(self):
+        for order in self:
+            if order.state not in ('draft', 'cancelled'):
+                raise UserError(f"Secure ERP Protection: You cannot delete Order '{order.name}' because it is in the '{dict(self._fields['state'].selection).get(order.state)}' state. Please cancel it first if you wish to remove it.")
+        return super(GoldPurchase, self).unlink()
 
     # Source
     order_source = fields.Selection([
@@ -293,7 +299,7 @@ class GoldPurchase(models.Model):
             'res_model': 'gold.logistics',
             'view_mode': 'tree,form',
             'domain': [('order_id', '=', self.id)],
-            'context': {'default_order_id': self.id},
+            'context': {'default_order_id': self.id, 'create': False},
         }
 
     def action_view_returns(self):
@@ -380,6 +386,7 @@ class GoldPurchase(models.Model):
                 'status': 'label_created',
                 'to_address': rec.shipping_address,
                 'pincode': rec.pincode,
+                'quality_check_done': True, # Mark QC as completed when packing
             })
 
     def action_dispatch(self):
@@ -453,8 +460,11 @@ class GoldPurchase(models.Model):
     # --- Strict CRUD Validations ---
     def unlink(self):
         for rec in self:
-            if rec.state not in ('draft', 'cancelled'):
-                raise ValidationError(_("Strict Security: You cannot delete an order that is already confirmed or delivered!"))
+            if rec.state not in ('draft', 'cancelled') or rec.payment_status != 'unpaid':
+                state_label = dict(self._fields['state'].selection).get(rec.state)
+                payment_label = dict(self._fields['payment_status'].selection).get(rec.payment_status)
+                raise UserError(_("Secure ERP Protection: You cannot delete Order '%s' because it is in the '%s' state or has payment status '%s'. "
+                                 "To maintain data integrity, please cancel the order first.") % (rec.name, state_label, payment_label))
         return super(GoldPurchase, self).unlink()
 
     def write(self, vals):

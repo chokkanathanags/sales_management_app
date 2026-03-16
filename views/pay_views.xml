@@ -163,7 +163,7 @@
         <field name="name">gold.payment.calendar</field>
         <field name="model">gold.payment</field>
         <field name="arch" type="xml">
-            <calendar string="Payments" date_start="payment_date" color="state" mode="month">
+            <calendar string="Payments" date_start="payment_date" color="state" mode="month" create="0">
                 <field name="customer_id"/>
                 <field name="amount" widget="monetary"/>
                 <field name="payment_method"/>

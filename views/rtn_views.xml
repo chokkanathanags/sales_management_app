@@ -69,8 +69,10 @@
                         <page string="Return Items &amp; Images" name="items">
                             <group>
                                 <group string="Product Details">
-                                    <field name="returned_item_sku"/>
-                                    <field name="returned_item_name"/>
+                                    <field name="order_line_id" options="{'no_create': True, 'no_open': True}"/>
+                                    <field name="returned_item_sku" readonly="1" force_save="1"/>
+                                    <field name="returned_item_name" readonly="1" force_save="1"/>
+                                    <field name="original_qty"/>
                                     <field name="returned_quantity"/>
                                 </group>
                                 <group string="Visual Evidence">
@@ -122,6 +124,21 @@
                                 <field name="refund_amount"/>
                                 <field name="shipping_deduction"/>
                                 <field name="restocking_deduction"/>
+                            </group>
+                        </page>
+                        <page string="Original Order Items" name="order_items">
+                            <field name="order_id" invisible="1"/>
+                            <field name="order_line_ids_ref" invisible="1"/> <!-- Added a helper field in model next -->
+                            <group string="Items from Original Order">
+                                <field name="order_line_ids_ref" nolabel="1" readonly="1">
+                                    <tree>
+                                        <field name="sku"/>
+                                        <field name="name"/>
+                                        <field name="quantity" string="Qty Bought"/>
+                                        <field name="base_value" widget="monetary"/>
+                                        <field name="line_total" widget="monetary"/>
+                                    </tree>
+                                </field>
                             </group>
                         </page>
                     </notebook>

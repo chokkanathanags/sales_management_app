@@ -172,7 +172,7 @@
         <field name="name">gold.logistics.calendar</field>
         <field name="model">gold.logistics</field>
         <field name="arch" type="xml">
-            <calendar string="Shipments" date_start="dispatch_date" date_stop="estimated_delivery" color="carrier" mode="month">
+            <calendar string="Shipments" date_start="dispatch_date" date_stop="estimated_delivery" color="carrier" mode="month" create="0">
                 <field name="name"/>
                 <field name="carrier"/>
                 <field name="status"/>

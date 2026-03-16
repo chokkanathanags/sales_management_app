@@ -26,6 +26,105 @@
     color: #333 !important;
 }
 
+/* --- Universal Fallback Active Style (CLEAN & PROFESSIONAL) --- */
+.o_notebook .nav-tabs .nav-link.active,
+.nav-pills .nav-link.active {
+    background: #2c3e50 !important; /* Professional Slate */
+    color: #ffffff !important;
+    border: 1px solid #2c3e50 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    z-index: 2;
+}
+
+/* Breadcrumb Active State */
+.breadcrumb-item.active {
+    color: #1f2937 !important;
+    font-weight: 800 !important;
+    border-bottom: 2px solid #8c733e !important;
+}
+
+/* Sidebar/Menu Active Highlight */
+.o_menu_sections .active,
+.o_sidebar .active,
+.o_nav_entry.active {
+    background-color: rgba(140, 115, 62, 0.1) !important;
+    border-left: 4px solid #8c733e !important;
+    font-weight: 700 !important;
+}
+
+/* Top Navbar Refinement: Professional Deep Indigo Theme */
+.o_main_navbar {
+    background-color: #4e3a7a !important; /* Elegant Indigo Purple */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* "Lite" Active State: Subtle color shift on select, NO yellow, NO borders */
+.o_main_navbar .o_menu_brand,
+.o_main_navbar .o_menu_sections .active,
+.o_main_navbar .o_menu_sections .active > a,
+.o_main_navbar .o_menu_sections .dropdown-item.active,
+/* Parent Highlight logic */
+.o_main_navbar .o_menu_sections .dropdown:has(.active) .dropdown-toggle,
+.o_main_navbar .o_menu_sections .dropdown:has(.o_active) .dropdown-toggle,
+.o_main_navbar .o_menu_sections .dropdown.active .dropdown-toggle,
+.o_main_navbar .o_menu_sections .show > .dropdown-toggle {
+    background-color: #5d4691 !important; /* Lite increase (lighter purple) */
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border: none !important;
+}
+
+.o_main_navbar .o_menu_sections a {
+    color: rgba(255, 255, 255, 0.9) !important;
+    padding: 0 16px !important;
+    transition: background 0.2s ease !important;
+}
+
+.o_main_navbar .o_menu_sections a:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+/* Breadcrumb & Title: Professional & Clean */
+.breadcrumb-item.active, 
+.o_breadcrumb_item.active,
+.oe_title h1,
+.o_control_panel .breadcrumb {
+    color: #4e3a7a !important; /* Match theme color */
+    font-weight: 700 !important;
+    background-color: transparent !important;
+    border: none !important;
+}
+
+/* Dropdown Menu: Modern & Professional (FIXED VISIBILITY) */
+.o_main_navbar .dropdown-menu {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2) !important;
+    padding: 8px 0 !important;
+    min-width: 220px !important;
+    z-index: 2000 !important; /* Ensure it stays above everything */
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Force dark text for dropdown items to avoid white-on-white */
+.o_main_navbar .dropdown-menu .dropdown-item {
+    color: #1e293b !important; /* Deep Slate - ALWAYS VISIBLE */
+    padding: 10px 24px !important;
+    font-weight: 500 !important;
+    display: block !important;
+    background-color: transparent !important;
+}
+
+.o_main_navbar .dropdown-menu .dropdown-item:hover,
+.o_main_navbar .dropdown-menu .dropdown-item.active {
+    background-color: #f1f5f9 !important;
+    color: #4e3a7a !important; /* Theme Color */
+    font-weight: 700 !important;
+}
+
 /* --- Forest Emerald Theme: Inventory & Details --- */
 .nav-link[data-name="info"], 
 .nav-link[data-name="inventory"] {
@@ -97,8 +196,37 @@
     margin-top: 30px !important;
 }
 
-/* Subtle background for groups */
-.o_group {
-    padding: 15px !important;
+/* --- Kanban Card Refinement: Inventory & Items --- */
+/* Restore standard layout but fix image expansion */
+.o_kanban_view .o_kanban_record {
     border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+    padding: 12px !important;
+    min-height: 140px !important;
+}
+
+.o_kanban_view .o_kanban_image {
+    width: 90px !important;
+    height: 90px !important;
+    max-height: 90px !important;
+    margin-right: 12px !important;
+}
+
+.o_kanban_view .o_kanban_image img {
+    max-width: 90px !important;
+    max-height: 90px !important;
+    object-fit: contain !important; /* FIXED: No more stretching, preserves jewelry looks */
+    border-radius: 4px !important;
+}
+
+/* Ensure details have enough room and don't stack numbers */
+.o_kanban_view .oe_kanban_details {
+    padding-left: 0 !important;
+    overflow: visible !important;
+}
+
+.o_kanban_record_bottom .oe_kanban_bottom_left,
+.o_kanban_record_bottom .oe_kanban_bottom_right {
+    white-space: nowrap !important; /* Prevents quantity from stacking vertically */
 }
