@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Pivot Analysis for Sales -->
+    <record id="view_gold_purchase_pivot_anl" model="ir.ui.view">
+        <field name="name">gold.purchase.pivot.anl</field>
+        <field name="model">gold.purchase</field>
+        <field name="arch" type="xml">
+            <pivot string="Sales Analysis">
+                <field name="order_date" type="row" interval="month"/>
+                <field name="payment_method" type="col"/>
+                <field name="total_value" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Graph Analysis for Sales -->
+    <record id="view_gold_purchase_graph_anl" model="ir.ui.view">
+        <field name="name">gold.purchase.graph.anl</field>
+        <field name="model">gold.purchase</field>
+        <field name="arch" type="xml">
+            <graph string="Sales Trends" type="line" sample="1">
+                <field name="order_date" type="row" interval="day"/>
+                <field name="total_value" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Analytics Action -->
+    <record id="action_gold_analytics" model="ir.actions.act_window">
+        <field name="name">ERP Dashboard &amp; Analytics</field>
+        <field name="res_model">gold.purchase</field>
+        <field name="view_mode">graph,pivot</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Welcome to your Analytics Center!
+            </p><p>
+                Analyze sales trends, inventory turnover, and financial performance across all sectors.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menuitem -->
+    <menuitem id="menu_gold_anl_root" name="Analytics" parent="menu_sales_management_root" sequence="100"/>
+    <menuitem id="menu_gold_analytics_dashboard" name="Sales Dashboard" parent="menu_gold_anl_root" action="action_gold_analytics" sequence="10"/>
+</odoo>

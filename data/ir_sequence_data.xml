@@ -37,4 +37,22 @@
         <field name="company_id" eval="False"/>
     </record>
 
+    <!-- Sequence for Orders (OMS) -->
+    <record id="seq_gold_purchase" model="ir.sequence">
+        <field name="name">Gold Purchase Order Sequence</field>
+        <field name="code">gold.purchase.seq</field>
+        <field name="prefix">ORD/%(range_year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Sequence for Inventory Transfers -->
+    <record id="seq_gold_inventory_transfer" model="ir.sequence">
+        <field name="name">Gold Inventory Transfer Sequence</field>
+        <field name="code">gold.inventory.transfer.seq</field>
+        <field name="prefix">TR/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
 </odoo>

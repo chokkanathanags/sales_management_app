@@ -118,6 +118,36 @@ class GoldCustomer(models.Model):
         for rec in self:
             rec.state = 'blacklisted'
 
+    def action_earn_points(self, amount):
+        """Earn points based on purchase amount (1% ratio)"""
+        for rec in self:
+            points_earned = amount * 0.01
+            rec.loyalty_points += points_earned
+            rec.loyalty_points_lifetime += points_earned
+
+    def action_update_metrics(self):
+        """Update lifetime value, order count, and segments"""
+        for rec in self:
+            orders = self.env['gold.purchase'].search([
+                ('customer_id', '=', rec.id),
+                ('state', '=', 'delivered')
+            ])
+            total_value = sum(orders.mapped('total_value'))
+            rec.write({
+                'total_purchase_value': total_value,
+                'total_purchase_count': len(orders),
+                'avg_order_value': total_value / len(orders) if orders else 0.0,
+                'last_purchase_date': orders[0].delivery_date.date() if orders else False
+            })
+            
+            # Auto-segmentation Logic
+            if total_value >= 500000:
+                rec.write({'segment': 'vip', 'state': 'vip'})
+            elif total_value >= 100000:
+                rec.write({'segment': 'gold', 'state': 'active'})
+            elif total_value >= 50000:
+                rec.write({'segment': 'silver', 'state': 'active'})
+
     # Stat Buttons Data
     order_count = fields.Integer(string='Order Count', compute='_compute_order_count')
 

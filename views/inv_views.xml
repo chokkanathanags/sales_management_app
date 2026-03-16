@@ -82,10 +82,15 @@
                     <field name="state" widget="statusbar" statusbar_visible="draft,available,reserved,sold"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_orders" type="object" class="oe_stat_button" icon="fa-shopping-cart">
+                            <field name="order_count" widget="statinfo" string="Orders"/>
+                        </button>
+                    </div>
                     <field name="image" widget="image" class="oe_avatar" options='{"preview_image": "image"}'/>
                     <div class="oe_title">
                         <label for="name" string="Item Reference"/>
-                        <h1><field name="name" readonly="1"/></h1>
+                        <h1><field name="name" placeholder="e.g. Necklace-001"/></h1>
                         <label for="sku" string="SKU Code"/>
                         <h2><field name="sku" placeholder="e.g. RING-GOLD-22K-001"/></h2>
                     </div>
@@ -272,25 +277,33 @@
         <field name="arch" type="xml">
             <form string="Stock Transfer">
                 <header>
+                    <button name="action_approve" string="Approve" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_transit" string="Mark In Transit" type="object" class="btn-info" invisible="state != 'approved'"/>
+                    <button name="action_done" string="Confirm Arrival" type="object" class="btn-success" invisible="state != 'in_transit'"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state in ['done', 'cancelled']"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,approved,in_transit,done"/>
                 </header>
                 <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Transfer Reference"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
                     <group>
                         <group string="Transfer Details">
-                            <field name="name"/>
                             <field name="inventory_id"/>
                             <field name="quantity"/>
                         </group>
-                        <group string="Locations">
+                        <group string="Locations &amp; Dates">
                             <field name="from_location"/>
                             <field name="to_location"/>
-                            <field name="transfer_date"/>
+                            <field name="transfer_date" readonly="1"/>
                             <field name="estimated_arrival"/>
+                            <field name="actual_arrival" readonly="1"/>
                         </group>
                     </group>
                     <group>
-                        <group string="Approval">
-                            <field name="approved_by"/>
+                        <group string="Personnel">
+                            <field name="approved_by" readonly="1"/>
                             <field name="cost"/>
                         </group>
                     </group>

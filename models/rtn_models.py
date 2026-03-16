@@ -8,14 +8,14 @@ class GoldReturns(models.Model):
     _rec_name = 'name'
     _order = 'initiation_date desc'
 
-    name = fields.Char(string='RMA Number', required=True, default='New', copy=False, index=True, tracking=True)
+    name = fields.Char(string='RMA Number', required=True, copy=False, index=True, tracking=True)
     order_id = fields.Many2one('gold.purchase', string='Original Order', required=True, tracking=True)
     customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
 
     @api.model
     def create(self, vals):
-        if vals.get('name', 'New') == 'New':
+        if not vals.get('name'):
             vals['name'] = self.env['ir.sequence'].next_by_code('gold.returns.seq') or 'New'
         return super(GoldReturns, self).create(vals)
 
@@ -165,6 +165,12 @@ class GoldReturns(models.Model):
                 'refund_state': 'processed',
                 'refund_date': fields.Datetime.now()
             })
+            # ERP Interconnection: Restock Inventory
+            if rec.order_id:
+                for line in rec.order_id.order_line_ids:
+                    if line.sku == rec.returned_item_sku and line.inventory_id:
+                        line.inventory_id.action_return(qty=rec.returned_quantity)
+                        rec.write({'inventory_restocked': True, 'restock_date': fields.Datetime.now()})
 
     def action_cancel(self):
         for rec in self:

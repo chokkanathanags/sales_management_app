@@ -6,6 +6,7 @@
     'author': 'Your Company',
     'depends': ['base', 'mail'],
     'data': [
+        'security/gold_security.xml',
         'security/ir.model.access.csv',
         'data/ir_sequence_data.xml',
         'data/sample_data.xml',
@@ -18,6 +19,7 @@
         'views/pay_views.xml',
         'views/log_views.xml',
         'views/rtn_views.xml',
+        'views/anl_views.xml',
         'views/menu_views.xml',
     ],
     'assets': {

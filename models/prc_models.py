@@ -72,6 +72,38 @@ class GoldRate(models.Model):
         for rec in self:
             rec.state = 'draft'
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super(GoldRate, self).create(vals_list)
+        for rec in records:
+            if rec.price_per_gram > 0:
+                self.env['gold.price.history'].create({
+                    'rate_id': rec.id,
+                    'old_price': 0.0,
+                    'new_price': rec.price_per_gram,
+                    'changed_by': self.env.user.name,
+                    'reason': 'Initial Rate Creation',
+                    'approval_state': 'approved',
+                })
+        return records
+
+    def write(self, vals):
+        # Auto-track price history if price_per_gram changes
+        if 'price_per_gram' in vals:
+            for rec in self:
+                old_price = rec.price_per_gram
+                new_price = vals['price_per_gram']
+                if old_price != new_price:
+                    self.env['gold.price.history'].create({
+                        'rate_id': rec.id,
+                        'old_price': old_price,
+                        'new_price': new_price,
+                        'changed_by': self.env.user.name,
+                        'reason': 'Rate Update',
+                        'approval_state': 'approved', 
+                    })
+        return super(GoldRate, self).write(vals)
+
     # Price Components
     making_charge_fixed = fields.Float(string='Making Charge (Fixed)')
     making_charge_pct = fields.Float(string='Making Charge (%)')
@@ -88,6 +120,7 @@ class GoldRate(models.Model):
 
     # Price List
     pricelist_id = fields.Many2one('gold.pricelist', string='Price List')
+    price_history_ids = fields.One2many('gold.price.history', 'rate_id', string='Price History')
 
     @api.constrains('price_per_gram')
     def _check_price(self):

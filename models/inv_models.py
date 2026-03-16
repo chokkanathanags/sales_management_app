@@ -19,7 +19,7 @@ class GoldInventory(models.Model):
     _order = 'name'
 
     # Basic Info
-    name = fields.Char(string='Reference', required=True, default='New', copy=False)
+    name = fields.Char(string='Reference', required=True, copy=False)
     sku = fields.Char(string='SKU', required=True, copy=False, index=True)
     serial_number = fields.Char(string='Serial Number (Unique)', required=True, copy=False, index=True)
     barcode = fields.Char(string='Barcode (EAN-13/Code128/QR)', copy=False, index=True)
@@ -122,6 +122,18 @@ class GoldInventory(models.Model):
         for rec in self:
             rec.state = 'inactive'
 
+    def action_sold(self, qty=1.0):
+        for rec in self:
+            rec.state = 'sold' if rec.quantity - qty <= 0 else 'available'
+            if rec.quantity >= qty:
+                rec.quantity -= qty
+
+    def action_return(self, qty=1.0):
+        for rec in self:
+            rec.state = 'available'
+            rec.quantity += qty
+
+
     # Financials
     making_charge = fields.Float(string='Making Charge', default=0.0)
     wastage = fields.Float(string='Wastage (%)', default=0.0)
@@ -133,6 +145,23 @@ class GoldInventory(models.Model):
 
     # Linked Rate
     rate_id = fields.Many2one('gold.rate', string='Gold Rate Used')
+
+    # Smart Button Counts
+    order_count = fields.Integer(compute='_compute_order_count')
+
+    def _compute_order_count(self):
+        for rec in self:
+            rec.order_count = self.env['gold.purchase.line'].search_count([('inventory_id', '=', rec.id)])
+
+    def action_view_orders(self):
+        order_line_ids = self.env['gold.purchase.line'].search([('inventory_id', '=', self.id)]).mapped('order_id').ids
+        return {
+            'name': 'Orders',
+            'type': 'ir.actions.act_window',
+            'res_model': 'gold.purchase',
+            'view_mode': 'tree,form',
+            'domain': [('id', 'in', order_line_ids)],
+        }
 
     @api.depends('quantity', 'qty_reserved')
     def _compute_qty_available(self):
@@ -160,29 +189,23 @@ class GoldInventory(models.Model):
                 if self.search_count(domain) > 0:
                     raise ValidationError(f"Serial number '{rec.serial_number}' already exists!")
 
-    @api.constrains('quantity', 'gross_weight', 'net_weight', 'stone_weight')
-    def _check_positive_values(self):
+    @api.constrains('type', 'karat', 'gross_weight', 'net_weight', 'quantity', 'stone_weight')
+    def _check_inventory_validity(self):
         for rec in self:
             if rec.quantity < 0:
                 raise ValidationError("Inventory quantity cannot be negative.")
-            if rec.gross_weight < 0 or rec.net_weight < 0 or rec.stone_weight < 0:
-                raise ValidationError("Weights cannot be negative.")
+                
+            if rec.type in ('gold', 'silver', 'platinum') and rec.net_weight <= 0:
+                raise ValidationError(f"ERROR: Net weight must be strictly greater than 0 for {rec.type} items. You cannot save an item without a weight.")
+                
+            if rec.stone_weight < 0:
+                raise ValidationError("Stone weight cannot be negative.")
+                
             if rec.net_weight > rec.gross_weight:
                 raise ValidationError("Net weight cannot be greater than gross weight.")
-
-    @api.constrains('gross_weight', 'net_weight')
-    def _check_weights(self):
-        for rec in self:
-            if rec.gross_weight < 0 or rec.net_weight < 0:
-                raise ValidationError("Weight values cannot be negative.")
-            if rec.net_weight > rec.gross_weight:
-                raise ValidationError("Net weight cannot be greater than gross weight.")
-
-    @api.constrains('karat')
-    def _check_karat(self):
-        for rec in self:
+                
             if rec.type == 'gold' and not rec.karat:
-                raise ValidationError("Karat must be specified for gold items.")
+                raise ValidationError("ERROR: Karat purity must be specified for all gold items. You cannot save this item without a Karat value.")
 
 
 class GoldInventoryTransfer(models.Model):
@@ -190,7 +213,7 @@ class GoldInventoryTransfer(models.Model):
     _description = 'Inventory Transfer'
     _rec_name = 'name'
 
-    name = fields.Char(string='Transfer Reference', required=True, default='New', copy=False)
+    name = fields.Char(string='Transfer Reference', required=True, copy=False)
     inventory_id = fields.Many2one('gold.inventory', string='Item', required=True)
     from_location = fields.Char(string='From Location', required=True)
     to_location = fields.Char(string='To Location', required=True)
@@ -204,9 +227,49 @@ class GoldInventoryTransfer(models.Model):
     ], string='Status', default='draft')
     transfer_date = fields.Datetime(string='Transfer Date')
     estimated_arrival = fields.Datetime(string='Estimated Arrival')
+    actual_arrival = fields.Datetime(string='Actual Arrival')
     cost = fields.Float(string='Transfer Cost')
     notes = fields.Text(string='Notes')
     approved_by = fields.Char(string='Approved By')
+
+    @api.onchange('inventory_id')
+    def _onchange_inventory_id(self):
+        if self.inventory_id:
+            self.from_location = self.inventory_id.store_location
+
+    def action_approve(self):
+        for rec in self:
+            rec.write({
+                'state': 'approved',
+                'approved_by': self.env.user.name
+            })
+
+    def action_transit(self):
+        for rec in self:
+            rec.write({
+                'state': 'in_transit',
+                'transfer_date': fields.Datetime.now()
+            })
+
+    def action_done(self):
+        for rec in self:
+            rec.write({
+                'state': 'done',
+                'actual_arrival': fields.Datetime.now()
+            })
+            if rec.inventory_id:
+                rec.inventory_id.write({'store_location': rec.to_location})
+
+    def action_cancel(self):
+        for rec in self:
+            rec.state = 'cancelled'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get('name'):
+                vals['name'] = self.env['ir.sequence'].next_by_code('gold.inventory.transfer.seq') or 'New'
+        return super(GoldInventoryTransfer, self).create(vals_list)
 
 
 class GoldInventoryReservation(models.Model):

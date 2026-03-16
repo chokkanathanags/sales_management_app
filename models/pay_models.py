@@ -9,7 +9,7 @@ class GoldPayment(models.Model):
     _rec_name = 'name'
     _order = 'payment_date desc'
 
-    name = fields.Char(string='Payment Reference', required=True, default='New', copy=False)
+    name = fields.Char(string='Payment Reference', required=True, copy=False)
     order_id = fields.Many2one('gold.purchase', string='Order', tracking=True)
     customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
@@ -78,7 +78,7 @@ class GoldPayment(models.Model):
     def action_confirm_success(self):
         for rec in self:
             rec.write({'state': 'success', 'payment_date': fields.Datetime.now()})
-            # Link back to order if needed
+            # Bidirectional Sync: Update Order payment status
             if rec.order_id:
                 rec.order_id.write({'payment_status': 'paid'})
 
@@ -93,6 +93,19 @@ class GoldPayment(models.Model):
     def action_reconcile(self):
         for rec in self:
             rec.write({'state': 'reconciled', 'is_reconciled': True, 'reconciliation_date': fields.Date.today()})
+
+    # --- Strict CRUD Validations ---
+    def unlink(self):
+        for rec in self:
+            if rec.state == 'success':
+                raise ValidationError(_("Strict Security: You cannot delete a successful payment record!"))
+        return super(GoldPayment, self).unlink()
+
+    def write(self, vals):
+        for rec in self:
+            if rec.state == 'success' and any(k in vals for k in ('amount', 'order_id', 'customer_id')):
+                raise ValidationError(_("Strict Security: You cannot modify core details of a SUCCESSFUL payment!"))
+        return super(GoldPayment, self).write(vals)
 
     # Reconciliation
     is_reconciled = fields.Boolean(string='Reconciled', default=False)
@@ -142,6 +155,6 @@ class GoldPayment(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if vals.get('name', 'New') == 'New':
+            if not vals.get('name'):
                 vals['name'] = self.env['ir.sequence'].next_by_code('gold.payment.seq') or 'New'
         return super(GoldPayment, self).create(vals_list)

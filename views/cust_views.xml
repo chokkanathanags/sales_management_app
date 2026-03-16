@@ -25,6 +25,7 @@
                     <button name="action_make_vip" string="Mark as VIP" type="object" class="btn-warning" invisible="state != 'active'"/>
                     <button name="action_deactivate" string="Deactivate" type="object" invisible="state not in ['active', 'vip']"/>
                     <button name="action_blacklist" string="Blacklist" type="object" class="btn-danger" invisible="state == 'blacklisted'"/>
+                    <button name="action_update_metrics" string="Refresh Metrics" type="object" icon="fa-refresh" class="btn-info" help="Recalculate LTV, Order Count and Loyalty Points"/>
                     <field name="state" widget="statusbar" statusbar_visible="prospect,active,vip"/>
                 </header>
                 <sheet>

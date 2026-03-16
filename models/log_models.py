@@ -8,13 +8,13 @@ class GoldLogistics(models.Model):
     _rec_name = 'name'
     _order = 'dispatch_date desc'
 
-    name = fields.Char(string='Tracking / AWB', required=True, default='New', copy=False, index=True, tracking=True)
+    name = fields.Char(string='Tracking / AWB', required=True, copy=False, index=True, tracking=True)
     order_id = fields.Many2one('gold.purchase', string='Order', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
 
     @api.model
     def create(self, vals):
-        if vals.get('name', 'New') == 'New':
+        if not vals.get('name'):
             vals['name'] = self.env['ir.sequence'].next_by_code('gold.logistics.seq') or 'New'
         return super(GoldLogistics, self).create(vals)
 
@@ -101,9 +101,9 @@ class GoldLogistics(models.Model):
     def action_delivered(self):
         for rec in self:
             rec.write({'status': 'delivered', 'actual_delivery': fields.Datetime.now()})
-            # Link back to order if needed
-            if rec.order_id:
-                rec.order_id.write({'state': 'delivered', 'delivery_date': fields.Datetime.now()})
+            # ERP Interconnection: Trigger Order Delivery Logic (Inventory & Loyalty)
+            if rec.order_id and rec.order_id.state not in ('delivered', 'cancelled'):
+                rec.order_id.action_delivered()
 
     def action_failed(self):
         for rec in self:

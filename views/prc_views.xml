@@ -83,6 +83,18 @@
                         <page string="Internal Notes" name="description">
                             <field name="description" placeholder="Internal justification or notes..."/>
                         </page>
+                        <page string="Price History" name="price_history">
+                            <field name="price_history_ids" readonly="1">
+                                <tree>
+                                    <field name="change_date"/>
+                                    <field name="old_price"/>
+                                    <field name="new_price"/>
+                                    <field name="changed_by"/>
+                                    <field name="reason"/>
+                                    <field name="approval_state" widget="badge" decoration-success="approval_state == 'approved'"/>
+                                </tree>
+                            </field>
+                        </page>
                     </notebook>
                 </sheet>
             </form>
