@@ -194,6 +194,16 @@ class GoldPurchase(models.Model):
             if not coupon:
                 raise ValidationError("Invalid coupon code.")
             
+            # CUSTOMER LIMIT CHECK: Has this customer used this coupon before?
+            previous_usage = self.env['gold.purchase'].search_count([
+                ('customer_id', '=', rec.customer_id.id),
+                ('coupon_code', '=', rec.coupon_code.strip()),
+                ('state', '!=', 'cancelled'),
+                ('id', '!=', rec.id)
+            ])
+            if previous_usage >= 1: # Standard limit of 1 per customer
+                raise ValidationError(f"Strict Security: Customer {rec.customer_id.name} has already used coupon '{rec.coupon_code}' on a previous order.")
+            
             # Validate Coupon State
             if coupon.state != 'active':
                 raise ValidationError(f"This coupon is {coupon.state}.")
@@ -229,6 +239,15 @@ class GoldPurchase(models.Model):
                 'discount_amount': discount,
             })
             # Trigger total recomputation
+            rec._compute_totals()
+
+    def action_refresh_rates(self):
+        """Update all order lines with the latest active gold rates for their Karat"""
+        for rec in self:
+            if rec.state != 'draft':
+                raise ValidationError("Rates can only be refreshed in Draft state.")
+            for line in rec.order_line_ids:
+                line._onchange_inventory_id() # Re-triggers the rate lookup
             rec._compute_totals()
     confirmation_date = fields.Datetime(string='Confirmed On')
     dispatch_date = fields.Datetime(string='Dispatched On')
@@ -502,15 +521,15 @@ class GoldPurchaseLine(models.Model):
             if not self.rate_id and inv.karat:
                 # Robust Karat Mapping (Inventory Label -> Pricing Code)
                 karat_map = {
-                    '24k': '999',
-                    '22k': '916',
-                    '18k': '750',
-                    '14k': '585',
+                    '24k': ['999', '24k', '24K'],
+                    '22k': ['916', '22k', '22K'],
+                    '18k': ['750', '18k', '18K'],
+                    '14k': ['585', '14k', '14K'],
                 }
-                mapped_code = karat_map.get(inv.karat.lower())
+                mapped_codes = karat_map.get(inv.karat.lower(), [inv.karat])
                 
                 latest_rate = self.env['gold.rate'].search([
-                    ('karat', 'in', [mapped_code, inv.karat]),
+                    ('karat', 'in', mapped_codes),
                     ('state', '=', 'active')
                 ], order='effective_date desc', limit=1)
                 

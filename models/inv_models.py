@@ -253,12 +253,34 @@ class GoldInventoryTransfer(models.Model):
 
     def action_done(self):
         for rec in self:
+            if rec.state == 'done':
+                continue
+            
+            if not rec.inventory_id:
+                raise ValidationError("No inventory item selected for transfer.")
+            
+            if rec.quantity > rec.inventory_id.quantity:
+                raise ValidationError(f"Insufficient quantity in stock. Available: {rec.inventory_id.quantity}")
+
+            # If partial transfer, split the record
+            if rec.quantity < rec.inventory_id.quantity:
+                # Create a new record for the destination
+                new_inv = rec.inventory_id.copy({
+                    'quantity': rec.quantity,
+                    'store_location': rec.to_location,
+                    'state': 'available',
+                    'name': f"{rec.inventory_id.name} (Moved)",
+                })
+                # Subtract from original
+                rec.inventory_id.write({'quantity': rec.inventory_id.quantity - rec.quantity})
+            else:
+                # Full transfer: Just update the location
+                rec.inventory_id.write({'store_location': rec.to_location})
+
             rec.write({
                 'state': 'done',
                 'actual_arrival': fields.Datetime.now()
             })
-            if rec.inventory_id:
-                rec.inventory_id.write({'store_location': rec.to_location})
 
     def action_cancel(self):
         for rec in self:
