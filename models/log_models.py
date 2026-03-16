@@ -8,7 +8,7 @@ class GoldLogistics(models.Model):
     _rec_name = 'name'
     _order = 'dispatch_date desc'
 
-    name = fields.Char(string='Tracking / AWB', copy=False, index=True, tracking=True, default='New', readonly=True)
+    name = fields.Char(string='Tracking / AWB', copy=False, index=True, tracking=True, readonly=True)
     order_id = fields.Many2one('gold.purchase', string='Order', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
 

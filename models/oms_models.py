@@ -8,7 +8,7 @@ class GoldPurchase(models.Model):
     _rec_name = 'name'
     _order = 'order_date desc'
 
-    name = fields.Char(string='Order Reference', copy=False, index=True, default='New', readonly=True)
+    name = fields.Char(string='Order Reference', copy=False, index=True, readonly=True)
     partner_id = fields.Many2one('res.partner', string='Customer', required=True)
     customer_id = fields.Many2one('gold.customer', string='Gold Customer', required=True)
     active = fields.Boolean(string='Active', default=True)
@@ -90,8 +90,8 @@ class GoldPurchase(models.Model):
     gift_wrapping = fields.Boolean(string='Gift Wrapping')
 
     # Pricing Summary
-    karat = fields.Char(string='Karat', compute='_compute_totals', store=True)
-    subtotal = fields.Float(string='Subtotal', compute='_compute_totals', store=True)
+    karat = fields.Char(string='Karat', compute='_compute_totals', store=True, readonly=True)
+    subtotal = fields.Float(string='Subtotal', compute='_compute_totals', store=True, readonly=True)
     discount_amount = fields.Float(string='Discount Amount')
     making_charge = fields.Float(string='Making Charges')
     wastage_charge = fields.Float(string='Wastage Charges')
@@ -99,9 +99,9 @@ class GoldPurchase(models.Model):
     cgst = fields.Float(string='CGST')
     sgst = fields.Float(string='SGST')
     igst = fields.Float(string='IGST')
-    tax_amount = fields.Float(string='Total Tax', compute='_compute_totals', store=True)
+    tax_amount = fields.Float(string='Total Tax', compute='_compute_totals', store=True, readonly=True)
     base_value = fields.Float(string='Base Value')
-    total_value = fields.Float(string='Total Value', compute='_compute_totals', store=True)
+    total_value = fields.Float(string='Total Value', compute='_compute_totals', store=True, readonly=True)
     currency_name = fields.Char(string='Currency', default='INR')
 
     # Promotions
@@ -110,7 +110,7 @@ class GoldPurchase(models.Model):
 
     # Loyalty
     loyalty_points_used = fields.Float(string='Loyalty Points Used')
-    loyalty_points_earned = fields.Float(string='Loyalty Points Earned', compute='_compute_loyalty_points_earned', store=True)
+    loyalty_points_earned = fields.Float(string='Loyalty Points Earned', compute='_compute_loyalty_points_earned', store=True, readonly=True)
 
     @api.depends('total_value')
     def _compute_loyalty_points_earned(self):
@@ -317,6 +317,12 @@ class GoldPurchase(models.Model):
             if rec.state != 'draft':
                 continue
             
+            if not rec.customer_id:
+                raise ValidationError("Please select a customer before confirming the order.")
+            
+            if not rec.order_line_ids:
+                raise ValidationError("The order must have at least one line item to be confirmed.")
+            
             # Recompute totals just in case
             rec._compute_totals()
             if rec.total_value <= 0:
@@ -470,13 +476,14 @@ class GoldPurchaseLine(models.Model):
     karat = fields.Char(string='Karat')
     gross_weight = fields.Float(string='Gross Weight (g)', digits=(10,3))
     net_weight = fields.Float(string='Net Weight (g)', digits=(10,3))
-    base_value = fields.Float(string='Base Value', compute='_compute_line_totals', store=True)
+    base_value = fields.Float(string='Base Value', compute='_compute_line_totals', store=True, readonly=True)
     making_charge = fields.Float(string='Making Charge')
     wastage_charge = fields.Float(string='Wastage Charge')
     stone_cost = fields.Float(string='Stone Cost')
     discount_amount = fields.Float(string='Discount')
-    tax_amount = fields.Float(string='Tax', compute='_compute_line_totals', store=True)
-    line_total = fields.Float(string='Line Total', compute='_compute_line_totals', store=True)
+    total_tax = fields.Float(string='Line Tax (3%)', compute='_compute_line_totals', store=True, readonly=True)
+    tax_amount = fields.Float(string='Tax', compute='_compute_line_totals', store=True, readonly=True)
+    line_total = fields.Float(string='Line Total', compute='_compute_line_totals', store=True, readonly=True)
     rate_id = fields.Many2one('gold.rate', string='Gold Rate at Order Time')
     customization = fields.Text(string='Customization Notes')
     state = fields.Selection([

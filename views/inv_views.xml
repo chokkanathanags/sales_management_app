@@ -127,7 +127,7 @@
                             <group>
                                 <group string="Quantities">
                                     <field name="quantity" class="oe_inline"/>
-                                    <field name="qty_available" class="oe_inline"/>
+                                    <field name="qty_available" class="oe_inline" readonly="1"/>
                                     <field name="qty_reserved" class="oe_inline"/>
                                     <field name="qty_damaged" class="oe_inline"/>
                                 </group>
@@ -148,9 +148,9 @@
                                     <field name="stone_cost"/>
                                 </group>
                                 <group string="Valuation">
-                                    <field name="base_value" widget="monetary" options="{'currency_field': 'currency_name'}"/>
-                                    <field name="tax_amount" widget="monetary"/>
-                                    <field name="total_value" widget="monetary" class="oe_read_only"/>
+                                    <field name="base_value" widget="monetary" options="{'currency_field': 'currency_name'}" readonly="1"/>
+                                    <field name="tax_amount" widget="monetary" readonly="1"/>
+                                    <field name="total_value" widget="monetary" class="oe_read_only" readonly="1"/>
                                     <field name="currency_name" invisible="1"/>
                                 </group>
                             </group>

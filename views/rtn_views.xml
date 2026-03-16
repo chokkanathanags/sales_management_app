@@ -86,7 +86,7 @@
                                 </group>
                                 <group string="Value Adjustments">
                                     <field name="exchange_price_diff"/>
-                                    <field name="old_gold_value" invisible="return_type != 'old_gold'"/>
+                                    <field name="old_gold_value" invisible="return_type != 'old_gold'" readonly="1"/>
                                 </group>
                             </group>
                         </page>
@@ -112,7 +112,7 @@
                                     <field name="refund_state" widget="badge"/>
                                 </group>
                                 <group string="Settlement">
-                                    <field name="final_refund_amount" widget="monetary" options="{'currency_field': 'currency_name'}"/>
+                                    <field name="final_refund_amount" widget="monetary" options="{'currency_field': 'currency_name'}" readonly="1"/>
                                     <field name="refund_date"/>
                                     <field name="refund_transaction_id"/>
                                     <field name="currency_name" invisible="1"/>

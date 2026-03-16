@@ -4,7 +4,7 @@
         <field name="name">gold.logistics.tree</field>
         <field name="model">gold.logistics</field>
         <field name="arch" type="xml">
-            <tree string="Shipments" 
+            <tree string="Shipments" create="0"
                   decoration-info="status == 'label_created'"
                   decoration-warning="status in ('pickup_scheduled', 'picked_up', 'in_transit')" 
                   decoration-success="status == 'delivered'" 
@@ -132,7 +132,7 @@
         <field name="name">gold.logistics.kanban</field>
         <field name="model">gold.logistics</field>
         <field name="arch" type="xml">
-            <kanban class="o_kanban_mobile" sample="1">
+            <kanban class="o_kanban_mobile" sample="1" create="0">
                 <field name="name"/>
                 <field name="carrier"/>
                 <field name="status"/>

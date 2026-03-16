@@ -66,7 +66,7 @@ class GoldInventory(models.Model):
 
     # Quantities
     quantity = fields.Float(string='On Hand Qty', digits=(10, 3), default=1.0)
-    qty_available = fields.Float(string='Available to Sell', compute='_compute_qty_available', store=True)
+    qty_available = fields.Float(string='Available to Sell', compute='_compute_qty_available', store=True, readonly=True)
     qty_reserved = fields.Float(string='Reserved Qty', default=0.0)
     qty_in_transit = fields.Float(string='In-Transit Qty', default=0.0)
     qty_on_order = fields.Float(string='On Order (Supplier)', default=0.0)
@@ -138,9 +138,9 @@ class GoldInventory(models.Model):
     making_charge = fields.Float(string='Making Charge', default=0.0)
     wastage = fields.Float(string='Wastage (%)', default=0.0)
     stone_cost = fields.Float(string='Stone Cost', default=0.0)
-    base_value = fields.Float(string='Base Value', compute='_compute_pricing', store=True)
-    total_value = fields.Float(string='Total Value', compute='_compute_pricing', store=True)
-    tax_amount = fields.Float(string='Tax Amount', compute='_compute_pricing', store=True)
+    base_value = fields.Float(string='Base Value', compute='_compute_pricing', store=True, readonly=True)
+    total_value = fields.Float(string='Total Value', compute='_compute_pricing', store=True, readonly=True)
+    tax_amount = fields.Float(string='Tax Amount', compute='_compute_pricing', store=True, readonly=True)
     currency_name = fields.Char(string='Currency', default='INR')
 
     # Linked Rate
@@ -213,7 +213,7 @@ class GoldInventoryTransfer(models.Model):
     _description = 'Inventory Transfer'
     _rec_name = 'name'
 
-    name = fields.Char(string='Transfer Reference', copy=False, default='New', readonly=True)
+    name = fields.Char(string='Transfer Reference', copy=False, readonly=True)
     inventory_id = fields.Many2one('gold.inventory', string='Item', required=True)
     from_location = fields.Char(string='From Location', required=True)
     to_location = fields.Char(string='To Location', required=True)
@@ -270,6 +270,8 @@ class GoldInventoryTransfer(models.Model):
                     'store_location': rec.to_location,
                     'state': 'available',
                     'name': f"{rec.inventory_id.name} (Moved)",
+                    'sku': f"{rec.inventory_id.sku}-T{fields.Datetime.now().strftime('%M%S')}",
+                    'serial_number': f"{rec.inventory_id.serial_number}-T{fields.Datetime.now().strftime('%M%S')}",
                 })
                 # Subtract from original
                 rec.inventory_id.write({'quantity': rec.inventory_id.quantity - rec.quantity})
@@ -300,7 +302,7 @@ class GoldInventoryReservation(models.Model):
     _rec_name = 'name'
     _order = 'id desc'
 
-    name = fields.Char(string='Reservation Reference', copy=False, default='New', readonly=True)
+    name = fields.Char(string='Reservation Reference', copy=False, readonly=True)
 
     @api.model_create_multi
     def create(self, vals_list):

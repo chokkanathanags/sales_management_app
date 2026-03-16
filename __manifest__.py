@@ -24,7 +24,6 @@
     ],
     'assets': {
         'web.assets_backend': [
-            'sales_management_app/static/src/js/form_safeguard.js',
             'sales_management_app/static/src/css/ui_style.css',
         ],
     },

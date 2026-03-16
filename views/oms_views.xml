@@ -103,14 +103,14 @@
                                     <button name="action_apply_coupon" type="object" string="Apply" class="btn-link" invisible="state != 'draft'"/>
                                 </div>
                                 <field name="promotion_id" readonly="1" invisible="not promotion_id"/>
-                                <field name="subtotal" string="Untaxed Subtotal" widget="monetary"/>
-                                <field name="tax_amount" string="Total GST (3%)" widget="monetary"/>
+                                <field name="subtotal" string="Untaxed Subtotal" widget="monetary" readonly="1"/>
+                                <field name="tax_amount" string="Total GST (3%)" widget="monetary" readonly="1"/>
                                 <field name="discount_amount" string="Promotional Discount" widget="monetary" decoration-danger="discount_amount > 0" invisible="discount_amount == 0"/>
                                 <field name="loyalty_points_used" string="Loyalty Redemption" widget="monetary" invisible="loyalty_points_used == 0"/>
                                 <div class="oe_subtotal_footer_separator oe_inline">
                                     <label for="total_value"/>
                                 </div>
-                                <field name="total_value" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary"/>
+                                <field name="total_value" nolabel="1" class="oe_subtotal_footer_separator" widget="monetary" readonly="1"/>
                             </group>
                         </page>
                         <page string="Shipping &amp; Delivery">

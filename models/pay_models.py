@@ -9,7 +9,7 @@ class GoldPayment(models.Model):
     _rec_name = 'name'
     _order = 'payment_date desc'
 
-    name = fields.Char(string='Payment Reference', copy=False, default='New', readonly=True)
+    name = fields.Char(string='Payment Reference', copy=False, readonly=True)
     order_id = fields.Many2one('gold.purchase', string='Order', tracking=True)
     customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)

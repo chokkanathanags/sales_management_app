@@ -8,7 +8,7 @@ class GoldReturns(models.Model):
     _rec_name = 'name'
     _order = 'initiation_date desc'
 
-    name = fields.Char(string='RMA Number', copy=False, index=True, tracking=True, default='New', readonly=True)
+    name = fields.Char(string='RMA Number', copy=False, index=True, tracking=True, readonly=True)
     order_id = fields.Many2one('gold.purchase', string='Original Order', required=True, tracking=True)
     customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
@@ -60,7 +60,7 @@ class GoldReturns(models.Model):
     exchange_price_diff = fields.Float(string='Price Difference for Exchange')
     old_gold_weight = fields.Float(string='Old Gold Weight (g)', digits=(10, 3))
     old_gold_rate = fields.Float(string='Old Gold Rate per gram')
-    old_gold_value = fields.Float(string='Old Gold Exchange Value', compute='_compute_old_gold_value', store=True)
+    old_gold_value = fields.Float(string='Old Gold Exchange Value', compute='_compute_old_gold_value', store=True, readonly=True)
 
     # Logistics
     logistics_id = fields.Many2one('gold.logistics', string='Return Shipment')
@@ -98,7 +98,7 @@ class GoldReturns(models.Model):
     refund_amount = fields.Float(string='Refund Amount')
     shipping_deduction = fields.Float(string='Shipping Deduction')
     restocking_deduction = fields.Float(string='Restocking Fee Deduction')
-    final_refund_amount = fields.Float(string='Final Refund Amount', compute='_compute_final_refund', store=True)
+    final_refund_amount = fields.Float(string='Final Refund Amount', compute='_compute_final_refund', store=True, readonly=True)
     refund_state = fields.Selection([
         ('pending', 'Refund Pending'),
         ('approved', 'Refund Approved'),

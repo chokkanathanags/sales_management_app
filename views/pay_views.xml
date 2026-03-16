@@ -4,7 +4,7 @@
         <field name="name">gold.payment.tree</field>
         <field name="model">gold.payment</field>
         <field name="arch" type="xml">
-            <tree string="Payments" 
+            <tree string="Payments" create="0"
                   decoration-info="state in ('initiated', 'pending')" 
                   decoration-success="state in ('success', 'reconciled')" 
                   decoration-danger="state == 'failed'" 

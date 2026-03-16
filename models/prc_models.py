@@ -33,8 +33,8 @@ class GoldRate(models.Model):
 
     # Rates
     price_per_gram = fields.Float(string='Price per Gram (INR)', required=True, default=0.0)
-    price_per_10g = fields.Float(string='Price per 10g (INR)', compute='_compute_rates', store=True)
-    price_per_tola = fields.Float(string='Price per Tola (INR)', compute='_compute_rates', store=True)
+    price_per_10g = fields.Float(string='Price per 10g (INR)', compute='_compute_rates', store=True, readonly=True)
+    price_per_tola = fields.Float(string='Price per Tola (INR)', compute='_compute_rates', store=True, readonly=True)
 
     # Date & Source
     effective_date = fields.Datetime(string='Effective From', required=True, default=fields.Datetime.now)
