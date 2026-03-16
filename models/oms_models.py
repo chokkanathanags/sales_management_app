@@ -8,7 +8,7 @@ class GoldPurchase(models.Model):
     _rec_name = 'name'
     _order = 'order_date desc'
 
-    name = fields.Char(string='Order Reference', required=True, copy=False, index=True)
+    name = fields.Char(string='Order Reference', copy=False, index=True, default='New', readonly=True)
     partner_id = fields.Many2one('res.partner', string='Customer', required=True)
     customer_id = fields.Many2one('gold.customer', string='Gold Customer', required=True)
     active = fields.Boolean(string='Active', default=True)
@@ -30,11 +30,12 @@ class GoldPurchase(models.Model):
     ], string='Order Source', default='online')
     payment_method = fields.Selection([
         ('cod', 'Cash on Delivery (COD)'),
-        ('card', 'Card Payment'),
+        ('card_debit', 'Debit Card'),
+        ('card_credit', 'Credit Card'),
         ('upi', 'UPI / Online'),
         ('gold_exchange', 'Old Gold Exchange'),
         ('advance', 'Advance / Down Payment'),
-    ], string='Payment Method', required=True, default='card')
+    ], string='Payment Method', required=True, default='card_credit')
     payment_status = fields.Selection([
         ('unpaid', 'Unpaid'),
         ('partial', 'Partially Paid'),

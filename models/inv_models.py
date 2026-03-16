@@ -213,7 +213,7 @@ class GoldInventoryTransfer(models.Model):
     _description = 'Inventory Transfer'
     _rec_name = 'name'
 
-    name = fields.Char(string='Transfer Reference', required=True, copy=False)
+    name = fields.Char(string='Transfer Reference', copy=False, default='New', readonly=True)
     inventory_id = fields.Many2one('gold.inventory', string='Item', required=True)
     from_location = fields.Char(string='From Location', required=True)
     to_location = fields.Char(string='To Location', required=True)
@@ -298,8 +298,17 @@ class GoldInventoryReservation(models.Model):
     _name = 'gold.inventory.reservation'
     _description = 'Inventory Reservation'
     _rec_name = 'name'
+    _order = 'id desc'
 
-    name = fields.Char(string='Reservation Reference', required=True, default='New', copy=False)
+    name = fields.Char(string='Reservation Reference', copy=False, default='New', readonly=True)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get('name') or vals.get('name') == 'New':
+                vals['name'] = self.env['ir.sequence'].next_by_code('gold.inventory.reservation.seq') or 'New'
+        return super(GoldInventoryReservation, self).create(vals_list)
+
     inventory_id = fields.Many2one('gold.inventory', string='Item', required=True)
     quantity = fields.Float(string='Reserved Qty', required=True, default=1.0)
     reserved_for = fields.Selection([

@@ -55,4 +55,13 @@
         <field name="company_id" eval="False"/>
     </record>
 
+    <!-- Sequence for Inventory Reservations -->
+    <record id="seq_gold_inventory_reservation" model="ir.sequence">
+        <field name="name">Gold Inventory Reservation Sequence</field>
+        <field name="code">gold.inventory.reservation.seq</field>
+        <field name="prefix">RES/%(range_year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
 </odoo>

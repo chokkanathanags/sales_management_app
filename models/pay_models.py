@@ -9,7 +9,7 @@ class GoldPayment(models.Model):
     _rec_name = 'name'
     _order = 'payment_date desc'
 
-    name = fields.Char(string='Payment Reference', required=True, copy=False)
+    name = fields.Char(string='Payment Reference', copy=False, default='New', readonly=True)
     order_id = fields.Many2one('gold.purchase', string='Order', tracking=True)
     customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
@@ -19,6 +19,7 @@ class GoldPayment(models.Model):
         ('cod', 'Cash on Delivery (COD)'),
         ('card_debit', 'Debit Card'),
         ('card_credit', 'Credit Card'),
+        ('card', 'Generic Card Payment'),
         ('upi', 'UPI'),
         ('net_banking', 'Net Banking'),
         ('wallet_paytm', 'Paytm Wallet'),

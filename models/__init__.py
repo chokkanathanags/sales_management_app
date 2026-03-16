@@ -6,3 +6,4 @@ from . import prm_models
 from . import pay_models
 from . import log_models
 from . import rtn_models
+from . import anl_models

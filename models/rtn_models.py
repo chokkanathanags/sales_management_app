@@ -8,16 +8,17 @@ class GoldReturns(models.Model):
     _rec_name = 'name'
     _order = 'initiation_date desc'
 
-    name = fields.Char(string='RMA Number', required=True, copy=False, index=True, tracking=True)
+    name = fields.Char(string='RMA Number', copy=False, index=True, tracking=True, default='New', readonly=True)
     order_id = fields.Many2one('gold.purchase', string='Original Order', required=True, tracking=True)
     customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
 
-    @api.model
-    def create(self, vals):
-        if not vals.get('name'):
-            vals['name'] = self.env['ir.sequence'].next_by_code('gold.returns.seq') or 'New'
-        return super(GoldReturns, self).create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get('name'):
+                vals['name'] = self.env['ir.sequence'].next_by_code('gold.returns.seq') or 'New'
+        return super(GoldReturns, self).create(vals_list)
 
     # Return Type
     return_type = fields.Selection([

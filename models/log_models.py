@@ -8,15 +8,16 @@ class GoldLogistics(models.Model):
     _rec_name = 'name'
     _order = 'dispatch_date desc'
 
-    name = fields.Char(string='Tracking / AWB', required=True, copy=False, index=True, tracking=True)
+    name = fields.Char(string='Tracking / AWB', copy=False, index=True, tracking=True, default='New', readonly=True)
     order_id = fields.Many2one('gold.purchase', string='Order', required=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
 
-    @api.model
-    def create(self, vals):
-        if not vals.get('name'):
-            vals['name'] = self.env['ir.sequence'].next_by_code('gold.logistics.seq') or 'New'
-        return super(GoldLogistics, self).create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get('name'):
+                vals['name'] = self.env['ir.sequence'].next_by_code('gold.logistics.seq') or 'New'
+        return super(GoldLogistics, self).create(vals_list)
 
     # Carrier
     carrier = fields.Selection([
