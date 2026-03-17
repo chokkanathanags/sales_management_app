@@ -196,7 +196,7 @@ class GoldInventory(models.Model):
         for rec in self:
             rec.qty_available = max(0, rec.quantity - rec.qty_reserved)
 
-    @api.depends('net_weight', 'rate_id', 'making_charge', 'making_charge_pct', 'wastage', 'stone_cost', 'gst_gold', 'gst_making', 'gst_diamond')
+    @api.depends('net_weight', 'rate_id', 'rate_id.price_per_gram', 'making_charge', 'making_charge_pct', 'wastage', 'stone_cost', 'gst_gold', 'gst_making', 'gst_diamond')
     def _compute_pricing(self):
         for rec in self:
             # Fallback Logic: Use Item value if > 0, otherwise use Rate value defaults
