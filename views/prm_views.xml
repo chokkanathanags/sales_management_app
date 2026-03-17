@@ -150,7 +150,7 @@
                     <notebook>
                         <page string="Coupons" name="coupons">
                             <field name="coupon_ids">
-                                <tree editable="bottom">
+                                <tree editable="bottom" limit="10">
                                     <field name="name"/>
                                     <field name="customer_id" optional="show"/>
                                     <field name="max_uses"/>
@@ -328,6 +328,7 @@
         <field name="name">Promotions &amp; Discounts</field>
         <field name="res_model">gold.promotions</field>
         <field name="view_mode">tree,kanban,form</field>
+        <field name="limit">20</field>
         <field name="context">{'search_default_active_promos': 0}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -345,6 +346,7 @@
         <field name="name">Active Promotions</field>
         <field name="res_model">gold.promotions</field>
         <field name="view_mode">tree,kanban,form</field>
+        <field name="limit">20</field>
         <field name="domain">[('state','=','active')]</field>
     </record>
 

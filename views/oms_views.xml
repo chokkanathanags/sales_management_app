@@ -80,7 +80,7 @@
                     <notebook>
                         <page string="Order Lines">
                             <field name="order_line_ids">
-                                <tree editable="bottom">
+                                <tree editable="bottom" limit="10">
                                     <field name="inventory_id"/>
                                     <field name="rate_id" column_invisible="True"/>
                                     <field name="stone_cost" column_invisible="True"/>
@@ -212,6 +212,7 @@
         <field name="name">Orders (OMS)</field>
         <field name="res_model">gold.purchase</field>
         <field name="view_mode">tree,kanban,form</field>
+        <field name="limit">20</field>
     </record>
 
     <menuitem id="menu_gold_oms_root" name="Order Management" parent="menu_sales_management_root" sequence="40"/>

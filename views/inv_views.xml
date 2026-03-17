@@ -39,6 +39,7 @@
         <field name="name">Categories</field>
         <field name="res_model">gold.category</field>
         <field name="view_mode">tree,form</field>
+        <field name="limit">20</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first jewelry category!
@@ -335,12 +336,14 @@
         <field name="name">Inventory</field>
         <field name="res_model">gold.inventory</field>
         <field name="view_mode">kanban,tree,form</field>
+        <field name="limit">20</field>
     </record>
 
     <record id="action_gold_inventory_transfer" model="ir.actions.act_window">
         <field name="name">Stock Transfers</field>
         <field name="res_model">gold.inventory.transfer</field>
         <field name="view_mode">tree,form</field>
+        <field name="limit">20</field>
     </record>
 
 </odoo>

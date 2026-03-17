@@ -210,6 +210,7 @@
         <field name="name">Logistics &amp; Tracking</field>
         <field name="res_model">gold.logistics</field>
         <field name="view_mode">tree,kanban,calendar,graph,form</field>
+        <field name="limit">20</field>
         <field name="context">{'search_default_in_transit': 1}</field>
     </record>
 
