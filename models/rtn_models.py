@@ -11,7 +11,7 @@ class GoldReturns(models.Model):
 
     name = fields.Char(string='RMA Number', copy=False, index=True, tracking=True, readonly=True)
     order_id = fields.Many2one('gold.purchase', string='Original Order', required=True, tracking=True)
-    customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
+    customer_id = fields.Many2one('gold.customer', string='Customer', related='order_id.customer_id', store=True, readonly=True, tracking=True)
     order_line_ids_ref = fields.One2many('gold.purchase.line', related='order_id.order_line_ids', string='Original Order Lines', readonly=True)
     active = fields.Boolean(string='Active', default=True)
 
@@ -58,13 +58,42 @@ class GoldReturns(models.Model):
     original_qty = fields.Float(string='Original Quantity', readonly=True)
     returned_quantity = fields.Float(string='Returned Quantity', default=1.0)
 
-    @api.onchange('order_line_id')
-    def _onchange_order_line_id(self):
+    @api.onchange('order_line_id', 'return_type', 'returned_quantity')
+    def _onchange_return_items(self):
         if self.order_line_id:
             self.returned_item_sku = self.order_line_id.sku
             self.returned_item_name = self.order_line_id.name
             self.original_qty = self.order_line_id.quantity
-            self.returned_quantity = self.order_line_id.quantity
+            
+            # If full return is selected, force the quantity to match original
+            if self.return_type == 'full':
+                self.returned_quantity = self.order_line_id.quantity
+            
+            # Cap the quantity and show a warning if the user tries to enter more than purchased
+            if self.returned_quantity > self.original_qty:
+                qty_before = self.returned_quantity
+                self.returned_quantity = self.original_qty
+                return {
+                    'warning': {
+                        'title': "Invalid Return Quantity",
+                        'message': f"You cannot return {qty_before} units because only {self.original_qty} units were originally purchased. The quantity has been reset to the maximum allowed.",
+                        'type': 'notification',
+                    }
+                }
+        else:
+            self.returned_item_sku = False
+            self.returned_item_name = False
+            self.original_qty = 0.0
+            self.returned_quantity = 0.0
+
+    @api.constrains('returned_quantity', 'original_qty', 'order_line_id')
+    def _check_return_quantity(self):
+        for rec in self:
+            if rec.order_line_id:
+                if rec.returned_quantity <= 0:
+                    raise ValidationError("Returned quantity must be greater than zero.")
+                if rec.returned_quantity > rec.original_qty:
+                    raise ValidationError(f"Invalid Quantity: You cannot return more than the original purchased quantity ({rec.original_qty}).")
 
     # Exchange
     exchange_item_sku = fields.Char(string='Exchange Item SKU')
@@ -179,11 +208,9 @@ class GoldReturns(models.Model):
                 'refund_date': fields.Datetime.now()
             })
             # ERP Interconnection: Restock Inventory
-            if rec.order_id:
-                for line in rec.order_id.order_line_ids:
-                    if line.sku == rec.returned_item_sku and line.inventory_id:
-                        line.inventory_id.action_return(qty=rec.returned_quantity)
-                        rec.write({'inventory_restocked': True, 'restock_date': fields.Datetime.now()})
+            if rec.order_line_id and rec.order_line_id.inventory_id:
+                rec.order_line_id.inventory_id.action_return(qty=rec.returned_quantity)
+                rec.write({'inventory_restocked': True, 'restock_date': fields.Datetime.now()})
 
     def action_cancel(self):
         for rec in self:

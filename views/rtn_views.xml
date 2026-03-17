@@ -54,7 +54,7 @@
                     <group>
                         <group string="Origin &amp; Type">
                             <field name="order_id" options="{'no_create': True}"/>
-                            <field name="customer_id" options="{'no_create': True}"/>
+                            <field name="customer_id" readonly="1" options="{'no_create': True}" force_save="1"/>
                             <field name="return_type"/>
                             <field name="reason"/>
                         </group>
@@ -72,8 +72,8 @@
                                     <field name="order_line_id" options="{'no_create': True, 'no_open': True}"/>
                                     <field name="returned_item_sku" readonly="1" force_save="1"/>
                                     <field name="returned_item_name" readonly="1" force_save="1"/>
-                                    <field name="original_qty"/>
-                                    <field name="returned_quantity"/>
+                                    <field name="original_qty" force_save="1"/>
+                                    <field name="returned_quantity" force_save="1" readonly="return_type == 'full'"/>
                                 </group>
                                 <group string="Visual Evidence">
                                     <field name="customer_images" widget="image" class="oe_avatar"/>
@@ -128,18 +128,16 @@
                         </page>
                         <page string="Original Order Items" name="order_items">
                             <field name="order_id" invisible="1"/>
-                            <field name="order_line_ids_ref" invisible="1"/> <!-- Added a helper field in model next -->
-                            <group string="Items from Original Order">
-                                <field name="order_line_ids_ref" nolabel="1" readonly="1">
-                                    <tree limit="10">
-                                        <field name="sku"/>
-                                        <field name="name"/>
-                                        <field name="quantity" string="Qty Bought"/>
-                                        <field name="base_value" widget="monetary"/>
-                                        <field name="line_total" widget="monetary"/>
-                                    </tree>
-                                </field>
-                            </group>
+                            <separator string="Items from Original Order"/>
+                            <field name="order_line_ids_ref" nolabel="1" readonly="1">
+                                <tree>
+                                    <field name="sku"/>
+                                    <field name="name"/>
+                                    <field name="quantity" string="Qty Bought"/>
+                                    <field name="base_value" widget="monetary" options="{'currency_field': 'parent.currency_name'}"/>
+                                    <field name="line_total" widget="monetary" options="{'currency_field': 'parent.currency_name'}"/>
+                                </tree>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>

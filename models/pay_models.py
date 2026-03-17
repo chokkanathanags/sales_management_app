@@ -11,7 +11,7 @@ class GoldPayment(models.Model):
 
     name = fields.Char(string='Payment Reference', copy=False, readonly=True)
     order_id = fields.Many2one('gold.purchase', string='Order', tracking=True)
-    customer_id = fields.Many2one('gold.customer', string='Customer', required=True, tracking=True)
+    customer_id = fields.Many2one('gold.customer', string='Customer', related='order_id.customer_id', store=True, readonly=True, tracking=True)
     active = fields.Boolean(string='Active', default=True)
 
     # Payment Method
@@ -113,7 +113,8 @@ class GoldPayment(models.Model):
     # Reconciliation
     is_reconciled = fields.Boolean(string='Reconciled', default=False)
     reconciliation_date = fields.Date(string='Reconciliation Date')
-    settlement_file_ref = fields.Char(string='Settlement File Reference')
+    settlement_file_ref = fields.Binary(string='Settlement File')
+    settlement_filename = fields.Char(string='Settlement Filename')
     discrepancy_amount = fields.Float(string='Discrepancy Amount')
     discrepancy_notes = fields.Text(string='Discrepancy Notes')
 
