@@ -51,7 +51,7 @@
                         <label for="name" string="Order Number"/>
                         <h1><field name="name" readonly="1"/></h1>
                     </div>
-                    <group>
+                    <group readonly="state == 'delivered' and payment_status == 'paid'">
                         <group string="Order Identity">
                             <field name="partner_id" widget="res_partner_many2one" context="{'res_partner_search_mode': 'customer'}" options="{'no_create': True}"/>
                             <field name="customer_id" options="{'no_create': True}"/>
@@ -87,10 +87,11 @@
                                 </tree>
                             </field>
                             <group class="oe_subtotal_footer oe_right">
-                                <label for="coupon_code" string="Promo Code"/>
+                                <label for="available_coupon_id" string="Promo Code"/>
                                 <div class="o_row">
-                                    <field name="coupon_code" placeholder="Enter Code..."/>
-                                    <button name="action_apply_coupon" type="object" string="Apply" class="btn-link" invisible="state != 'draft'"/>
+                                    <field name="available_coupon_id" placeholder="Select a code..." invisible="state != 'draft'"/>
+                                    <field name="coupon_code" placeholder="Manual entry..." invisible="available_coupon_id"/>
+                                    <button name="action_apply_coupon" type="object" string="Apply" class="btn-link" invisible="state != 'draft' or available_coupon_id"/>
                                 </div>
                                 <field name="promotion_id" readonly="1" invisible="not promotion_id"/>
                                 <field name="subtotal" string="Untaxed Subtotal" widget="monetary" readonly="1"/>

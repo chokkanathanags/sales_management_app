@@ -113,6 +113,16 @@ class GoldPurchase(models.Model):
     # Promotions
     promotion_id = fields.Many2one('gold.promotions', string='Promotion Applied')
     coupon_code = fields.Char(string='Coupon Code Used')
+    available_coupon_id = fields.Many2one('gold.coupon', string='Select Promocode', 
+                                          domain="[('state', '=', 'active'), '|', ('customer_id', '=', False), ('customer_id', '=', customer_id)]")
+
+    @api.onchange('available_coupon_id')
+    def _onchange_available_coupon_id(self):
+        if self.available_coupon_id:
+            self.coupon_code = self.available_coupon_id.name
+            # Automatically apply the coupon logic
+            # Since action_apply_coupon returns an effect, we just want the side effects here
+            self.action_apply_coupon()
 
     # Loyalty
     loyalty_points_used = fields.Float(string='Loyalty Points Used')
@@ -224,12 +234,14 @@ class GoldPurchase(models.Model):
                 raise ValidationError(f"Strict Security: This specific coupon is uniquely assigned to '{coupon.customer_id.name}'. You cannot use it for '{rec.customer_id.name}'.")
 
             # 5. Check Usage Limits (Customer level)
-            previous_usage = self.env['gold.purchase'].search_count([
+            usage_domain = [
                 ('customer_id', '=', rec.customer_id.id),
                 ('coupon_code', '=', code),
                 ('state', 'not in', ('draft', 'cancelled')),
-                ('id', '!=', rec.id)
-            ])
+            ]
+            if rec._origin.id:
+                usage_domain.append(('id', '!=', rec._origin.id))
+            previous_usage = self.env['gold.purchase'].search_count(usage_domain)
             if previous_usage >= 1:
                 raise ValidationError(f"Usage Limit: Customer '{rec.customer_id.name}' has already successfully used coupon '{code}' once.")
 
@@ -504,6 +516,11 @@ class GoldPurchase(models.Model):
         # Allow updates during module installation/upgrade (e.g., for demo data)
         if not self._context.get('install_mode'):
             for rec in self:
+                # Disable ALL edits if Delivered AND Paid
+                if rec.state == 'delivered' and rec.payment_status == 'paid':
+                   raise ValidationError(_("Strict Security: This order is FULLY PAID and DELIVERED. No further modifications are allowed to maintain financial and audit integrity."))
+                
+                # Maintain existing partial restriction for delivered orders
                 if rec.state == 'delivered' and any(k in vals for k in ('order_line_ids', 'customer_id', 'total_value')):
                     raise ValidationError(_("Strict Security: You cannot modify core details of a DELIVERED order!"))
         return super(GoldPurchase, self).write(vals)

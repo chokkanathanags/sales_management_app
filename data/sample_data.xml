@@ -23,7 +23,7 @@
         <!-- 2. Customers (Ensuring partner linkage) -->
         <record id="customer_vip_1" model="gold.customer">
             <field name="name">Rajesh Kumar</field>
-            <field name="mobile">9876543210</field>
+            <field name="mobile">987854613215</field>
             <field name="email">rajesh.kumar@vip.com</field>
             <field name="segment">vip</field>
             <field name="state">active</field>
