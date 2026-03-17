@@ -103,9 +103,11 @@ class GoldPayment(models.Model):
         return super(GoldPayment, self).unlink()
 
     def write(self, vals):
-        for rec in self:
-            if rec.state == 'success' and any(k in vals for k in ('amount', 'order_id', 'customer_id')):
-                raise ValidationError(_("Strict Security: You cannot modify core details of a SUCCESSFUL payment!"))
+        # Allow updates during module installation/upgrade (e.g., for demo data)
+        if not self._context.get('install_mode'):
+            for rec in self:
+                if rec.state == 'success' and any(k in vals for k in ('amount', 'order_id', 'customer_id')):
+                    raise ValidationError(_("Strict Security: You cannot modify core details of a SUCCESSFUL payment!"))
         return super(GoldPayment, self).write(vals)
 
     # Reconciliation

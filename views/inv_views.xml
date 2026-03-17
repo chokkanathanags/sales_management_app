@@ -144,16 +144,27 @@
                         </page>
                         <page string="Financials" name="financials">
                             <group>
-                                <group string="Costing">
+                                <group string="Costing &amp; Rates">
                                     <field name="rate_id"/>
-                                    <field name="making_charge"/>
+                                    <label for="making_charge" string="Making Charge"/>
+                                    <div class="o_row">
+                                        <field name="making_charge"/> (Fixed) + 
+                                        <field name="making_charge_pct"/> %
+                                    </div>
                                     <field name="wastage"/>
                                     <field name="stone_cost"/>
                                 </group>
-                                <group string="Valuation">
+                                <group string="Taxation (%)">
+                                    <field name="gst_gold"/>
+                                    <field name="gst_making"/>
+                                    <field name="gst_diamond"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Valuation Summary">
                                     <field name="base_value" widget="monetary" options="{'currency_field': 'currency_name'}" readonly="1"/>
                                     <field name="tax_amount" widget="monetary" readonly="1"/>
-                                    <field name="total_value" widget="monetary" class="oe_read_only" readonly="1"/>
+                                    <field name="total_value" widget="monetary" class="oe_read_only" readonly="1" decoration-bf="1"/>
                                     <field name="currency_name" invisible="1"/>
                                 </group>
                             </group>

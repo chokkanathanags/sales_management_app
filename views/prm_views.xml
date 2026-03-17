@@ -221,7 +221,7 @@
                                 </div>
                                 <div class="o_kanban_manage_button_area">
                                     <a class="o_kanban_manage_toggle_button" href="#">
-                                        <i class="fa fa-ellipsis-v" aria-label="Manage" role="img"/>
+                                        <i class="fa fa-ellipsis-v" aria-label="Manage" role="img" title="Manage"/>
                                     </a>
                                 </div>
                             </div>
@@ -240,13 +240,13 @@
                                     </t>
                                 </div>
                                 <div class="text-muted mt4">
-                                    <i class="fa fa-calendar"/> <field name="start_date" widget="date"/>
+                                    <i class="fa fa-calendar" title="Validity Period"/> <field name="start_date" widget="date"/>
                                     → <field name="end_date" widget="date"/>
                                 </div>
                             </div>
                             <div class="o_kanban_record_bottom">
                                 <div class="oe_kanban_bottom_left">
-                                    <span><i class="fa fa-ticket"/> <field name="coupon_count"/> coupons</span>
+                                    <span><i class="fa fa-ticket" title="Coupons"/> <field name="coupon_count"/> coupons</span>
                                 </div>
                                 <div class="oe_kanban_bottom_right">
                                     <field name="state"

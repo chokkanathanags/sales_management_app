@@ -145,16 +145,34 @@ class GoldInventory(models.Model):
 
 
     # Financials
-    making_charge = fields.Float(string='Making Charge', default=0.0)
+    making_charge = fields.Float(string='Making Charge (Fixed)', default=0.0)
+    making_charge_pct = fields.Float(string='Making Charge (%)', default=0.0)
     wastage = fields.Float(string='Wastage (%)', default=0.0)
     stone_cost = fields.Float(string='Stone Cost', default=0.0)
+    
+    # Taxes (Synced from Rate)
+    gst_gold = fields.Float(string='GST on Gold (%)', default=3.0)
+    gst_making = fields.Float(string='GST on Making (%)', default=5.0)
+    gst_diamond = fields.Float(string='GST on Diamond (%)', default=18.0)
+
     base_value = fields.Float(string='Base Value', compute='_compute_pricing', store=True, readonly=True)
     total_value = fields.Float(string='Total Value', compute='_compute_pricing', store=True, readonly=True)
     tax_amount = fields.Float(string='Tax Amount', compute='_compute_pricing', store=True, readonly=True)
     currency_name = fields.Char(string='Currency', default='INR')
 
     # Linked Rate
-    rate_id = fields.Many2one('gold.rate', string='Gold Rate Used')
+    rate_id = fields.Many2one('gold.rate', string='Metal Rate Used', domain="[('metal_type', '=', type), ('state', '=', 'active')]")
+
+    @api.onchange('rate_id')
+    def _onchange_rate_id(self):
+        """Sync Price Breakdown from selected rate to this inventory item"""
+        if self.rate_id:
+            self.making_charge = self.rate_id.making_charge_fixed
+            self.making_charge_pct = self.rate_id.making_charge_pct
+            self.wastage = self.rate_id.wastage_pct
+            self.gst_gold = self.rate_id.gst_gold
+            self.gst_making = self.rate_id.gst_making
+            self.gst_diamond = self.rate_id.gst_diamond
 
     # Smart Button Counts
     order_count = fields.Integer(compute='_compute_order_count')
@@ -178,18 +196,36 @@ class GoldInventory(models.Model):
         for rec in self:
             rec.qty_available = max(0, rec.quantity - rec.qty_reserved)
 
-    @api.depends('net_weight', 'rate_id', 'making_charge', 'wastage', 'stone_cost')
+    @api.depends('net_weight', 'rate_id', 'making_charge', 'making_charge_pct', 'wastage', 'stone_cost', 'gst_gold', 'gst_making', 'gst_diamond')
     def _compute_pricing(self):
         for rec in self:
-            # 1. Base Gold Value
+            # Fallback Logic: Use Item value if > 0, otherwise use Rate value defaults
+            mc_fixed = rec.making_charge or (rec.rate_id.making_charge_fixed if rec.rate_id else 0.0)
+            mc_pct = rec.making_charge_pct or (rec.rate_id.making_charge_pct if rec.rate_id else 0.0)
+            wastage_pct = rec.wastage or (rec.rate_id.wastage_pct if rec.rate_id else 0.0)
+            
+            tax_gold_pct = rec.gst_gold or (rec.rate_id.gst_gold if rec.rate_id else 3.0)
+            tax_making_pct = rec.gst_making or (rec.rate_id.gst_making if rec.rate_id else 5.0)
+            tax_stone_pct = rec.gst_diamond or (rec.rate_id.gst_diamond if rec.rate_id else 18.0)
+
+            # 1. Base Gold Value (including wastage)
             gold_rate = rec.rate_id.price_per_gram if rec.rate_id else 0.0
-            rec.base_value = rec.net_weight * gold_rate
+            wastage_weight = rec.net_weight * (wastage_pct / 100.0)
+            rec.base_value = (rec.net_weight + wastage_weight) * gold_rate
             
-            # 2. Taxation (Assume 3% GST on Gold)
-            rec.tax_amount = (rec.base_value + rec.making_charge + rec.stone_cost) * 0.03
+            # 2. Making Charges
+            making_val_pct = rec.base_value * (mc_pct / 100.0)
+            total_making = mc_fixed + making_val_pct
             
-            # 3. Total Final Price
-            rec.total_value = rec.base_value + rec.making_charge + rec.stone_cost + rec.tax_amount
+            # 3. Taxation
+            tax_gold = rec.base_value * (tax_gold_pct / 100.0)
+            tax_making = total_making * (tax_making_pct / 100.0)
+            tax_other = rec.stone_cost * (tax_stone_pct / 100.0)
+            
+            rec.tax_amount = tax_gold + tax_making + tax_other
+            
+            # 4. Total Final Price
+            rec.total_value = rec.base_value + total_making + rec.stone_cost + rec.tax_amount
 
     @api.constrains('serial_number')
     def _check_unique_serial(self):
@@ -216,6 +252,9 @@ class GoldInventory(models.Model):
                 
             if rec.type == 'gold' and not rec.karat:
                 raise ValidationError("ERROR: Karat purity must be specified for all gold items. You cannot save this item without a Karat value.")
+
+            if rec.rate_id and rec.rate_id.metal_type != rec.type:
+                raise ValidationError(f"Metal Type Mismatch: You selected a '{rec.rate_id.metal_type}' rate for a '{rec.type}' item!")
 
 
 class GoldInventoryTransfer(models.Model):

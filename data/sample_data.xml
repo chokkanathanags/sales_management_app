@@ -1,6 +1,135 @@
 <?xml version='1.0' encoding='utf-8'?>
 <odoo>
-    <data noupdate='1'>
+    <data noupdate="0">
+        <!-- 1. Promotions & Coupons -->
+        <record id="promo_making_waiver" model="gold.promotions">
+            <field name="name">Akshaya Tritiya - 50% Off Making</field>
+            <field name="code">AKSHAYA50</field>
+            <field name="promotion_type">percentage</field>
+            <field name="discount_pct">50.0</field>
+            <field name="state">active</field>
+            <field name="start_date" eval="(datetime.now() - relativedelta(days=5)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="end_date" eval="(datetime.now() + relativedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="description">Celebrate the festival with half-off making charges on all gold jewelry.</field>
+        </record>
 
+        <record id="coupon_akshaya_1" model="gold.coupon">
+            <field name="name">FESTIVAL2024</field>
+            <field name="promotion_id" ref="promo_making_waiver"/>
+            <field name="max_uses">100</field>
+            <field name="state">active</field>
+        </record>
+
+        <!-- 2. Customers (Ensuring partner linkage) -->
+        <record id="customer_vip_1" model="gold.customer">
+            <field name="name">Rajesh Kumar</field>
+            <field name="mobile">9876543210</field>
+            <field name="email">rajesh.kumar@vip.com</field>
+            <field name="segment">vip</field>
+            <field name="state">active</field>
+        </record>
+
+        <!-- 3. Metal Rates -->
+        <record id="rate_gold_22k_demo" model="gold.rate">
+            <field name="name">Standard 22K (916) - Mumbai</field>
+            <field name="metal_type">gold</field>
+            <field name="karat">916</field>
+            <field name="price_per_gram">5950.0</field>
+            <field name="effective_date" eval="datetime.now().strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="state">active</field>
+            <field name="making_charge_fixed">450.0</field>
+            <field name="making_charge_pct">10.0</field>
+            <field name="wastage_pct">2.5</field>
+        </record>
+
+        <record id="rate_gold_24k_demo" model="gold.rate">
+            <field name="name">Pure Gold 24K (999)</field>
+            <field name="metal_type">gold</field>
+            <field name="karat">999</field>
+            <field name="price_per_gram">6350.0</field>
+            <field name="effective_date" eval="datetime.now().strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="state">active</field>
+            <field name="making_charge_fixed">200.0</field>
+        </record>
+
+        <record id="rate_platinum_demo" model="gold.rate">
+            <field name="name">Platinum Pure (950)</field>
+            <field name="metal_type">platinum</field>
+            <field name="price_per_gram">3500.0</field>
+            <field name="state">active</field>
+            <field name="making_charge_fixed">1200.0</field>
+        </record>
+
+        <!-- 4. Inventory -->
+        <record id="inv_item_demo_necklace" model="gold.inventory">
+            <field name="name">Royal Temple Work Necklace</field>
+            <field name="sku">NCK-TEMP-916-01</field>
+            <field name="serial_number">SER-916-NCK-2024-001</field>
+            <field name="type">gold</field>
+            <field name="karat">22k</field>
+            <field name="category_id" ref="cat_gold_jewelry"/>
+            <field name="net_weight">32.450</field>
+            <field name="gross_weight">35.200</field>
+            <field name="rate_id" ref="rate_gold_22k_demo"/>
+            <field name="state">available</field>
+            <field name="quantity">1</field>
+        </record>
+
+        <record id="inv_item_demo_ring" model="gold.inventory">
+            <field name="name">Classic Platinum Band</field>
+            <field name="sku">RNG-PLAT-001</field>
+            <field name="serial_number">SER-PLT-RNG-2024-005</field>
+            <field name="type">platinum</field>
+            <field name="category_id" ref="cat_platinum_jewelry"/>
+            <field name="net_weight">6.200</field>
+            <field name="gross_weight">6.200</field>
+            <field name="rate_id" ref="rate_platinum_demo"/>
+            <field name="state">available</field>
+            <field name="quantity">5</field>
+        </record>
+
+        <record id="inv_item_demo_coin" model="gold.inventory">
+            <field name="name">Investment Gold Coin 24K (10g)</field>
+            <field name="sku">COIN-G24-10G</field>
+            <field name="serial_number">SER-G24-COIN-010</field>
+            <field name="type">gold</field>
+            <field name="karat">24k</field>
+            <field name="category_id" ref="cat_coins"/>
+            <field name="net_weight">10.000</field>
+            <field name="gross_weight">10.000</field>
+            <field name="rate_id" ref="rate_gold_24k_demo"/>
+            <field name="state">available</field>
+            <field name="quantity">20</field>
+        </record>
+
+        <!-- 5. Sample Order (Delivered Flow) -->
+        <record id="order_demo_1" model="gold.purchase">
+            <field name="partner_id" ref="base.main_partner"/>
+            <field name="customer_id" ref="customer_vip_1"/>
+            <field name="state">delivered</field>
+            <field name="payment_status">paid</field>
+            <field name="payment_method">card_credit</field>
+            <field name="order_date" eval="(datetime.now() - relativedelta(days=2)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="delivery_date" eval="(datetime.now() - relativedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+        <record id="order_line_demo_1" model="gold.purchase.line">
+            <field name="order_id" ref="order_demo_1"/>
+            <field name="inventory_id" ref="inv_item_demo_necklace"/>
+            <field name="name">Royal Temple Work Necklace</field>
+            <field name="quantity">1</field>
+            <field name="net_weight">32.450</field>
+            <field name="rate_id" ref="rate_gold_22k_demo"/>
+        </record>
+
+        <!-- 6. Payment Record -->
+        <record id="payment_demo_1" model="gold.payment">
+            <field name="order_id" ref="order_demo_1"/>
+            <field name="customer_id" ref="customer_vip_1"/>
+            <field name="amount">215000.0</field> <!-- Estimated total -->
+            <field name="payment_method">card_credit</field>
+            <field name="state">success</field>
+            <field name="transaction_id">TXN_DEMO_999888</field>
+        </record>
     </data>
 </odoo>

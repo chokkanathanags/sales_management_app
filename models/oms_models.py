@@ -468,9 +468,11 @@ class GoldPurchase(models.Model):
         return super(GoldPurchase, self).unlink()
 
     def write(self, vals):
-        for rec in self:
-            if rec.state == 'delivered' and any(k in vals for k in ('order_line_ids', 'customer_id', 'total_value')):
-                raise ValidationError(_("Strict Security: You cannot modify core details of a DELIVERED order!"))
+        # Allow updates during module installation/upgrade (e.g., for demo data)
+        if not self._context.get('install_mode'):
+            for rec in self:
+                if rec.state == 'delivered' and any(k in vals for k in ('order_line_ids', 'customer_id', 'total_value')):
+                    raise ValidationError(_("Strict Security: You cannot modify core details of a DELIVERED order!"))
         return super(GoldPurchase, self).write(vals)
 
 

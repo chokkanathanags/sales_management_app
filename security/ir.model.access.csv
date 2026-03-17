@@ -28,3 +28,5 @@ access_gold_logistics_mgr,gold.logistics.mgr,model_gold_logistics,sales_manageme
 access_gold_logistics_sp,gold.logistics.sp,model_gold_logistics,sales_management_app.group_gold_salesperson,1,1,1,0
 access_gold_returns_mgr,gold.returns.mgr,model_gold_returns,sales_management_app.group_gold_manager,1,1,1,1
 access_gold_returns_sp,gold.returns.sp,model_gold_returns,sales_management_app.group_gold_salesperson,1,1,0,0
+access_gold_analytics_dashboard_mgr,gold.analytics.dashboard.mgr,model_gold_analytics_dashboard,sales_management_app.group_gold_manager,1,0,0,0
+access_gold_analytics_dashboard_sp,gold.analytics.dashboard.sp,model_gold_analytics_dashboard,sales_management_app.group_gold_salesperson,1,0,0,0

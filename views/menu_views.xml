@@ -3,8 +3,7 @@
     <!-- Root Menu -->
     <menuitem id="menu_sales_management_root" 
               name="Gold Sale Management" 
-              sequence="10" 
-              web_icon="base,static/description/icon.png"/>
+              sequence="10"/>
 
     <!-- Inventory Section -->
     <menuitem id="menu_gold_inventory_root" 
