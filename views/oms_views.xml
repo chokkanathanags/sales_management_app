@@ -46,17 +46,7 @@
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,quality_check,packed,dispatched,delivered"/>
                 </header>
                 <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button name="action_view_payments" type="object" class="oe_stat_button" icon="fa-money">
-                            <field name="payment_count" widget="statinfo" string="Payments"/>
-                        </button>
-                        <button name="action_view_logistics" type="object" class="oe_stat_button" icon="fa-truck">
-                            <field name="logistics_count" widget="statinfo" string="Logistics"/>
-                        </button>
-                        <button name="action_view_returns" type="object" class="oe_stat_button" icon="fa-undo">
-                            <field name="return_count" widget="statinfo" string="Returns"/>
-                        </button>
-                    </div>
+
                     <div class="oe_title">
                         <label for="name" string="Order Number"/>
                         <h1><field name="name" readonly="1"/></h1>

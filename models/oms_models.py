@@ -189,45 +189,66 @@ class GoldPurchase(models.Model):
     order_date = fields.Datetime(string='Order Date', default=fields.Datetime.now)
     
     def action_apply_coupon(self):
-        """Apply a coupon code to the current order"""
+        """Apply a coupon code with strict validation: assignment, price range, and channel."""
         for rec in self:
             if not rec.coupon_code:
                 raise ValidationError("Please enter a coupon code.")
             if rec.state != 'draft':
                 raise ValidationError("Coupons can only be applied to Draft orders.")
-            
-            # Find the coupon
-            coupon = self.env['gold.coupon'].search([('name', '=', rec.coupon_code.strip())], limit=1)
+            if not rec.customer_id:
+                raise ValidationError("Please select a customer before applying a coupon.")
+
+            code = rec.coupon_code.strip()
+            # 1. Find the coupon
+            coupon = self.env['gold.coupon'].search([('name', '=', code)], limit=1)
             if not coupon:
-                raise ValidationError("Invalid coupon code.")
+                raise ValidationError(f"Invalid coupon code: '{code}' not found.")
+
+            # 2. Validate Coupon State & Promotion State
+            if coupon.state != 'active':
+                raise ValidationError(f"This coupon ('{code}') is currently {coupon.state}.")
             
-            # CUSTOMER LIMIT CHECK: Has this customer used this coupon before?
+            promo = coupon.promotion_id
+            if promo.state != 'active' or not promo.active:
+                raise ValidationError(f"The promotion '{promo.name}' is not currently active.")
+
+            # 3. Check Dates
+            now = fields.Datetime.now()
+            if promo.start_date > now:
+                raise ValidationError(f"Promotion '{promo.name}' hasn't started yet (Starts: {promo.start_date}).")
+            if promo.end_date < now:
+                raise ValidationError(f"Promotion '{promo.name}' expired on {promo.end_date}.")
+
+            # 4. Check Customer Assignment (Specific Coupons)
+            if coupon.customer_id and coupon.customer_id != rec.customer_id:
+                raise ValidationError(f"Strict Security: This specific coupon is uniquely assigned to '{coupon.customer_id.name}'. You cannot use it for '{rec.customer_id.name}'.")
+
+            # 5. Check Usage Limits (Customer level)
             previous_usage = self.env['gold.purchase'].search_count([
                 ('customer_id', '=', rec.customer_id.id),
-                ('coupon_code', '=', rec.coupon_code.strip()),
-                ('state', '!=', 'cancelled'),
+                ('coupon_code', '=', code),
+                ('state', 'not in', ('draft', 'cancelled')),
                 ('id', '!=', rec.id)
             ])
-            if previous_usage >= 1: # Standard limit of 1 per customer
-                raise ValidationError(f"Strict Security: Customer {rec.customer_id.name} has already used coupon '{rec.coupon_code}' on a previous order.")
-            
-            # Validate Coupon State
-            if coupon.state != 'active':
-                raise ValidationError(f"This coupon is {coupon.state}.")
-            
-            # Validate Promotion Eligibility
-            promo = coupon.promotion_id
-            if promo.state != 'active':
-                raise ValidationError("The promotion associated with this coupon is not active.")
-            
-            # Check Dates
-            now = fields.Datetime.now()
-            if promo.start_date > now or promo.end_date < now:
-                raise ValidationError("This promotion has expired or not yet started.")
-            
-            # Calculate Discount
-            discount = 0.0
+            if previous_usage >= 1:
+                raise ValidationError(f"Usage Limit: Customer '{rec.customer_id.name}' has already successfully used coupon '{code}' once.")
+
+            # 6. Check Order Price Range (Minimum/Maximum Order Value)
             subtotal = rec.subtotal
+            if promo.min_cart_value > 0 and subtotal < promo.min_cart_value:
+                raise ValidationError(f"Minimum Spend Required: Your order subtotal (₹{subtotal:,.2f}) is below the required ₹{promo.min_cart_value:,.2f} for this coupon.")
+            
+            if promo.max_cart_value > 0 and subtotal > promo.max_cart_value:
+                raise ValidationError(f"Order Value High: This promotion is only valid for orders up to ₹{promo.max_cart_value:,.2f}. Your order is ₹{subtotal:,.2f}.")
+
+            # 7. Check Channel (Online vs Store)
+            if promo.applicable_channel == 'online' and rec.order_source not in ('online', 'app'):
+                raise ValidationError(f"Channel Restriction: Promotion '{promo.name}' is only valid for Online/App orders.")
+            elif promo.applicable_channel == 'offline' and rec.order_source != 'store':
+                raise ValidationError(f"Channel Restriction: Coupon '{code}' can only be redeemed In-Store.")
+
+            # 8. Calculate and Apply Discount
+            discount = 0.0
             if promo.promotion_type == 'percentage':
                 discount = subtotal * (promo.discount_pct / 100.0)
             elif promo.promotion_type == 'flat':
@@ -241,12 +262,24 @@ class GoldPurchase(models.Model):
             if promo.max_discount_cap > 0:
                 discount = min(discount, promo.max_discount_cap)
             
+            # Final Safety: Discount can't exceed subtotal
+            discount = min(discount, subtotal)
+
             rec.write({
                 'promotion_id': promo.id,
                 'discount_amount': discount,
             })
-            # Trigger total recomputation
+            # Recompute total
             rec._compute_totals()
+            
+            # Success confirmation (optional but helps avoid double-clicking)
+            return {
+                'effect': {
+                    'fadeout': 'slow',
+                    'message': f"Success! ₹{discount:,.2f} discount applied.",
+                    'type': 'rainbow_man',
+                }
+            }
 
     def action_refresh_rates(self):
         """Update all order lines with the latest active gold rates for their Karat"""

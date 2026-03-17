@@ -54,7 +54,8 @@ class GoldPromotions(models.Model):
 
     applicable_category = fields.Char(string='Applicable Category')
 
-    min_cart_value = fields.Float(string='Minimum Cart Value')
+    min_cart_value = fields.Float(string='Minimum Order Value')
+    max_cart_value = fields.Float(string='Maximum Order Value (Limit)', help="If set, orders above this value cannot use this promotion.")
     applicable_channel = fields.Selection([
         ('online',  'Online Only'),
         ('offline', 'Store Only'),

@@ -89,14 +89,7 @@
                 </header>
 
                 <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button name="action_view_coupons"
-                                type="object"
-                                class="oe_stat_button"
-                                icon="fa-ticket">
-                            <field name="coupon_count" widget="statinfo" string="Coupons"/>
-                        </button>
-                    </div>
+
 
                     <div class="oe_title">
                         <label for="name"/>
@@ -138,6 +131,7 @@
                         </group>
                         <group string="Conditions">
                             <field name="min_cart_value"/>
+                            <field name="max_cart_value"/>
                             <field name="applicable_channel"/>
                             <field name="applicable_payment_method"
                                    invisible="promotion_type != 'payment_method'"/>
