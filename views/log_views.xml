@@ -10,7 +10,8 @@
                   decoration-success="status == 'delivered'" 
                   decoration-danger="status == 'delivery_failed'">
                 <field name="name"/>
-                <field name="order_id"/>
+                <field name="order_id" optional="show"/>
+                <field name="transfer_id" optional="show"/>
                 <field name="carrier"/>
                 <field name="awb_number"/>
                 <field name="estimated_delivery" widget="remaining_days"/>
@@ -30,14 +31,22 @@
         <field name="arch" type="xml">
             <form string="Shipment">
                 <header>
-                    <button name="action_picked_up" string="Record Pickup" type="object" class="btn-primary" invisible="status != 'pickup_scheduled'"/>
-                    <button name="action_in_transit" string="Mark In Transit" type="object" class="btn-info" invisible="status != 'picked_up'"/>
+                    <button name="action_schedule_pickup" string="Schedule Pickup" type="object" class="btn-primary" invisible="status != 'label_created'"/>
+                    <button name="action_picked_up" string="Picked Up" type="object" class="btn-primary" invisible="status != 'pickup_scheduled'"/>
+                    <button name="action_in_transit" string="Dispatch to Hub" type="object" class="btn-info" invisible="status != 'picked_up'"/>
                     <button name="action_out_for_delivery" string="Out for Delivery" type="object" class="btn-warning" invisible="status != 'in_transit'"/>
-                    <button name="action_delivered" string="Delivered" type="object" class="btn-success" invisible="status != 'out_for_delivery'"/>
-                    <button name="action_failed" string="Mark Failed" type="object" class="btn-danger" invisible="status in ['delivered', 'delivery_failed']"/>
+                    <button name="action_delivered" string="Confirm Delivery" type="object" class="btn-success" invisible="status != 'out_for_delivery'"/>
+                    <button name="action_failed" string="Delivery Failed" type="object" class="btn-danger" invisible="status in ['delivered', 'delivery_failed']"/>
                     <field name="status" widget="statusbar" statusbar_visible="label_created,picked_up,in_transit,delivered"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_transfer" type="object" class="oe_stat_button" icon="fa-exchange" invisible="transfer_id == False">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Transfer</span>
+                            </div>
+                        </button>
+                    </div>
                     <widget name="web_ribbon" title="Delivered" bg_color="text-bg-success" invisible="status != 'delivered'"/>
                     <widget name="web_ribbon" title="Failed" bg_color="text-bg-danger" invisible="status != 'delivery_failed'"/>
                     <widget name="web_ribbon" title="In Transit" bg_color="text-bg-info" invisible="status != 'in_transit'"/>
@@ -45,12 +54,16 @@
                     <div class="oe_title">
                         <label for="name" string="Tracking # / AWB"/>
                         <h1><field name="name" readonly="1"/></h1>
-                        <label for="awb_number" string="Carrier AWB"/>
-                        <h2><field name="awb_number" placeholder="Enter Carrier AWB Number"/></h2>
+                        <h2>
+                            <field name="awb_number" placeholder="Enter Carrier AWB Number" class="oe_inline"/>
+                            <field name="tracking_url" invisible="1"/>
+                            <button string="Track on Courier Site" type="url" name="tracking_url" class="btn-link oe_inline" invisible="not tracking_url" icon="fa-external-link"/>
+                        </h2>
                     </div>
                     <group>
-                        <group string="Carrier Service">
-                            <field name="order_id" options="{'no_create': True}"/>
+                        <group string="Origin Service">
+                            <field name="order_id" options="{'no_create': True}" invisible="not order_id"/>
+                            <field name="transfer_id" options="{'no_create': True}" invisible="not transfer_id"/>
                             <field name="carrier"/>
                             <field name="aggregator"/>
                             <field name="delivery_type"/>
@@ -185,7 +198,7 @@
         <field name="model">gold.logistics</field>
         <field name="arch" type="xml">
             <search string="Search Shipments">
-                <field name="name" string="Tracking/AWB/Order" filter_domain="['|', '|', ('name', 'ilike', self), ('awb_number', 'ilike', self), ('order_id', 'ilike', self)]"/>
+                <field name="name" string="Tracking/AWB/Ref" filter_domain="['|', '|', '|', ('name', 'ilike', self), ('awb_number', 'ilike', self), ('order_id', 'ilike', self), ('transfer_id', 'ilike', self)]"/>
                 <field name="awb_number"/>
                 <field name="carrier"/>
                 <field name="status"/>

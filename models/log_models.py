@@ -9,7 +9,8 @@ class GoldLogistics(models.Model):
     _order = 'dispatch_date desc'
 
     name = fields.Char(string='Tracking / AWB', copy=False, index=True, tracking=True, readonly=True)
-    order_id = fields.Many2one('gold.purchase', string='Order', required=True, tracking=True)
+    order_id = fields.Many2one('gold.purchase', string='Order', required=False, tracking=True)
+    transfer_id = fields.Many2one('gold.inventory.transfer', string='Stock Transfer', required=False, tracking=True)
     active = fields.Boolean(string='Active', default=True)
 
     @api.model_create_multi
@@ -34,6 +35,22 @@ class GoldLogistics(models.Model):
     ], string='Carrier', required=True)
     awb_number = fields.Char(string='AWB Number', copy=False, index=True)
     aggregator = fields.Char(string='Shipping Aggregator (Shiprocket, etc.)')
+    tracking_url = fields.Char(string='Tracking URL', compute='_compute_tracking_url')
+
+    @api.depends('carrier', 'awb_number')
+    def _compute_tracking_url(self):
+        for rec in self:
+            url = False
+            if rec.carrier and rec.awb_number:
+                if rec.carrier == 'bluedart':
+                    url = f"https://www.bluedart.com/tracking?handler=bluedart&action=track&numbers={rec.awb_number}"
+                elif rec.carrier == 'fedex':
+                    url = f"https://www.fedex.com/apps/fedextrack/?tracknumbers={rec.awb_number}"
+                elif rec.carrier == 'delhivery':
+                    url = f"https://www.delhivery.com/track/package/{rec.awb_number}"
+                elif rec.carrier == 'dtdc':
+                    url = f"https://www.dtdc.in/tracking/tracking_results.asp?pNo={rec.awb_number}"
+            rec.tracking_url = url
 
     # Shipment Type
     shipment_type = fields.Selection([
@@ -87,6 +104,10 @@ class GoldLogistics(models.Model):
         ('return_delivered', 'Return Delivered'),
     ], string='Tracking Status', default='label_created', index=True)
 
+    def action_schedule_pickup(self):
+        for rec in self:
+            rec.write({'status': 'pickup_scheduled', 'pickup_date': fields.Date.today()})
+
     def action_picked_up(self):
         for rec in self:
             rec.write({'status': 'picked_up', 'pickup_date': fields.Date.today()})
@@ -102,13 +123,38 @@ class GoldLogistics(models.Model):
     def action_delivered(self):
         for rec in self:
             rec.write({'status': 'delivered', 'actual_delivery': fields.Datetime.now()})
-            # ERP Interconnection: Trigger Order Delivery Logic (Inventory & Loyalty)
+            # ERP Interconnection: Trigger Order Delivery Logic
             if rec.order_id and rec.order_id.state not in ('delivered', 'cancelled'):
                 rec.order_id.action_delivered()
+            
+            # Stock Synergy: Trigger Transfer Completion Logic
+            if rec.transfer_id and rec.transfer_id.state == 'in_transit':
+                rec.transfer_id.action_done()
 
     def action_failed(self):
         for rec in self:
-            rec.status = 'delivery_failed'
+            rec.write({'status': 'delivery_failed'})
+            # Notify source document
+            if rec.transfer_id and rec.transfer_id.state == 'in_transit':
+                # Currently, we just keep it in transit or maybe move to a specific state?
+                # For now, let's just log it in the notes.
+                rec.transfer_id.message_post(body="Shipment failed! Please investigate.")
+            
+            if rec.order_id:
+                rec.order_id.message_post(body="Delivery attempt failed for tracking %s" % rec.name)
+
+    def action_view_transfer(self):
+        self.ensure_one()
+        if not self.transfer_id:
+            return True
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Stock Transfer',
+            'res_model': 'gold.inventory.transfer',
+            'res_id': self.transfer_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
 
     state = fields.Selection([
         ('draft', 'Draft'),

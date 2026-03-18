@@ -11,45 +11,16 @@
               parent="menu_sales_management_root" 
               sequence="10"/>
               
-    <menuitem id="menu_gold_inventory" 
-              name="Jewelry Items" 
-              parent="menu_gold_inventory_root" 
-              action="action_gold_inventory" 
-              sequence="10"/>
-
-    <menuitem id="menu_gold_category" 
-              name="Categories" 
-              parent="menu_gold_inventory_root" 
-              action="action_gold_category" 
-              sequence="15"/>
               
-    <menuitem id="menu_gold_inventory_transfer" 
-              name="Stock Transfers" 
-              parent="menu_gold_inventory_root" 
-              action="action_gold_inventory_transfer" 
-              sequence="20"/>
-
     <!-- Pricing Section -->
     <menuitem id="menu_gold_pricing_root" 
               name="Pricing &amp; Rates" 
               parent="menu_sales_management_root" 
               sequence="20"/>
               
-    <menuitem id="menu_gold_pricing" 
-              name="Live Gold Rates" 
-              parent="menu_gold_pricing_root" 
-              action="action_gold_rate" 
-              sequence="10"/>
-              
-    <menuitem id="menu_gold_pricelist" 
-              name="Price Lists" 
-              parent="menu_gold_pricing_root" 
-              action="action_gold_pricelist" 
-              sequence="20"/>
-              
-    <menuitem id="menu_gold_price_history" 
-              name="Price History" 
-              parent="menu_gold_pricing_root" 
-              action="action_gold_price_history" 
-              sequence="30"/>
+    <!-- Customer Section -->
+    <menuitem id="menu_gold_customer_root" 
+              name="Customers" 
+              parent="menu_sales_management_root" 
+              sequence="50"/>
 </odoo>

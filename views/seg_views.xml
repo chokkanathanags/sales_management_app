@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_gold_segment_tree" model="ir.ui.view">
+        <field name="name">gold.segment.tree</field>
+        <field name="model">gold.segment</field>
+        <field name="arch" type="xml">
+            <tree string="Segments" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="min_lifetime_value"/>
+                <field name="color" widget="color_picker"/>
+                <field name="active" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_gold_segment" model="ir.actions.act_window">
+        <field name="name">Customer Segments</field>
+        <field name="res_model">gold.segment</field>
+        <field name="view_mode">tree</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first customer segment!
+            </p><p>
+                Define segments like VIP, Gold, or Regular to drive automated pricing.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_gold_segment" 
+              name="Segments" 
+              parent="menu_gold_customer_root" 
+              action="action_gold_segment" 
+              sequence="20"/>
+</odoo>

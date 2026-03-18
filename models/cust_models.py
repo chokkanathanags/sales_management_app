@@ -59,18 +59,8 @@ class GoldCustomer(models.Model):
     saved_payment_tokens = fields.Text(string='Saved Payment Tokens (JSON)')
 
     # Segment
-    segment = fields.Selection([
-        ('regular', 'Regular'),
-        ('silver', 'Silver'),
-        ('gold', 'Gold'),
-        ('platinum', 'Platinum'),
-        ('vip', 'VIP'),
-        ('diamond', 'Diamond'),
-        ('corporate', 'Corporate'),
-        ('wholesale', 'Wholesale'),
-        ('employee', 'Employee'),
-        ('influencer', 'Influencer'),
-    ], string='Customer Segment/Tier', default='regular', required=True)
+    segment_id = fields.Many2one('gold.segment', string='Customer Segment/Tier', tracking=True)
+    segment_code = fields.Char(related='segment_id.code', string='Segment Code', store=True, readonly=True)
     auto_segment_rule = fields.Char(string='Auto-Segment Rule Applied')
 
     # Source & Acquisition
@@ -140,13 +130,23 @@ class GoldCustomer(models.Model):
                 'last_purchase_date': orders[0].delivery_date.date() if orders else False
             })
             
-            # Auto-segmentation Logic
+            # Auto-segmentation Logic (Standardized)
+            new_seg_code = False
             if total_value >= 500000:
-                rec.write({'segment': 'vip', 'state': 'vip'})
+                new_seg_code = 'diamond'
             elif total_value >= 100000:
-                rec.write({'segment': 'gold', 'state': 'active'})
+                new_seg_code = 'gold'
             elif total_value >= 50000:
-                rec.write({'segment': 'silver', 'state': 'active'})
+                new_seg_code = 'silver'
+            
+            if new_seg_code:
+                seg = self.env['gold.segment'].search([('code', '=', new_seg_code)], limit=1)
+                if seg:
+                    rec.write({'segment_id': seg.id})
+                    if new_seg_code == 'diamond':
+                        rec.write({'state': 'vip'})
+                    else:
+                        rec.write({'state': 'active'})
 
     # Stat Buttons Data
     order_count = fields.Integer(string='Order Count', compute='_compute_order_count')

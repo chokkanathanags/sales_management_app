@@ -62,7 +62,7 @@ class GoldPromotions(models.Model):
         ('all',     'All Channels'),
     ], string='Applicable Channel', default='all')
     applicable_payment_method = fields.Char(string='Payment Method')
-    customer_segment = fields.Char(string='Customer Segment')
+    segment_id = fields.Many2one('gold.segment', string='Customer Segment')
     applicable_product_ids = fields.Char(string='Applicable Product SKUs')
     exclusion_product_ids = fields.Char(string='Excluded Product SKUs')
 

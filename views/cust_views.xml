@@ -4,11 +4,11 @@
         <field name="name">gold.customer.tree</field>
         <field name="model">gold.customer</field>
         <field name="arch" type="xml">
-            <tree string="Customers" decoration-info="segment == 'regular'" decoration-warning="segment == 'gold'" decoration-success="segment == 'platinum'" sample="1">
+            <tree string="Customers" decoration-info="segment_code == 'regular'" decoration-warning="segment_code == 'gold'" decoration-success="segment_code == 'platinum'" sample="1">
                 <field name="name"/>
                 <field name="mobile" widget="phone"/>
                 <field name="email" widget="email"/>
-                <field name="segment" widget="badge" decoration-info="segment == 'regular'" decoration-warning="segment == 'gold'" decoration-success="segment == 'platinum'"/>
+                <field name="segment_code" widget="badge" decoration-info="segment_code == 'regular'" decoration-warning="segment_code == 'gold'" decoration-success="segment_code == 'platinum'"/>
                 <field name="total_purchase_value" sum="Total Lifetime Value" widget="monetary" options="{'currency_field': 'currency_name'}"/>
                 <field name="loyalty_points" optional="show"/>
                 <field name="state" widget="badge" decoration-success="state == 'active'" decoration-info="state == 'inactive'" decoration-danger="state == 'blacklisted'"/>
@@ -44,7 +44,7 @@
                             <field name="partner_id" placeholder="Link to system partner"/>
                         </group>
                         <group string="Segmentation">
-                            <field name="segment" widget="radio" options="{'horizontal': true}"/>
+                            <field name="segment_code" widget="radio" options="{'horizontal': true}"/>
                             <field name="preferred_store"/>
                             <field name="active" widget="boolean_toggle"/>
                         </group>
@@ -52,6 +52,10 @@
                     <notebook>
                         <page string="Profile &amp; Personal" name="profile">
                             <group>
+                                <group string="Segmentation">
+                                    <field name="segment_id" options="{'no_create_record': True}"/>
+                                    <field name="auto_segment_rule"/>
+                                </group>
                                 <group string="Demographics">
                                     <field name="first_name"/>
                                     <field name="last_name"/>
@@ -119,7 +123,7 @@
                 <field name="name"/>
                 <field name="mobile"/>
                 <field name="email"/>
-                <field name="segment"/>
+                <field name="segment_code"/>
                 <field name="image"/>
                 <field name="total_purchase_value"/>
                 <field name="currency_name"/>
@@ -137,7 +141,7 @@
                                     <field name="mobile"/>
                                 </div>
                                 <div>
-                                    <span class="badge badge-pill badge-primary"><field name="segment"/></span>
+                                    <span class="badge badge-pill badge-primary"><field name="segment_code"/></span>
                                 </div>
                                 <div class="mt-2 text-primary font-weight-bold">
                                     <field name="total_purchase_value" widget="monetary" options="{'currency_field': 'currency_name'}"/>
@@ -162,9 +166,9 @@
         <field name="name">gold.customer.calendar</field>
         <field name="model">gold.customer</field>
         <field name="arch" type="xml">
-            <calendar string="Customers" date_start="registration_date" color="segment" mode="month">
+            <calendar string="Customers" date_start="registration_date" color="segment_code" mode="month">
                 <field name="name"/>
-                <field name="segment"/>
+                <field name="segment_code"/>
             </calendar>
         </field>
     </record>
@@ -176,7 +180,7 @@
             <search string="Search Customers">
                 <field name="name" filter_domain="['|', '|', ('name', 'ilike', self), ('mobile', 'ilike', self), ('email', 'ilike', self)]" string="Name/Mobile/Email"/>
                 <field name="unique_customer_id"/>
-                <field name="segment"/>
+                <field name="segment_code"/>
                 <field name="state"/>
                 
                 <separator/>
@@ -186,7 +190,7 @@
                 
                 <group expand="0" string="Group By">
                     <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
-                    <filter name="group_by_segment" string="Segment/Tier" context="{'group_by': 'segment'}"/>
+                    <filter name="group_by_segment" string="Segment/Tier" context="{'group_by': 'segment_code'}"/>
                     <filter name="group_by_store" string="Preferred Store" context="{'group_by': 'preferred_store'}"/>
                 </group>
             </search>
@@ -201,6 +205,5 @@
         <field name="context">{'search_default_active_custs': 1}</field>
     </record>
 
-    <menuitem id="menu_gold_customer_root" name="Customers" parent="menu_sales_management_root" sequence="50"/>
     <menuitem id="menu_gold_customer" name="All Customers" parent="menu_gold_customer_root" action="action_gold_customer" sequence="10"/>
 </odoo>

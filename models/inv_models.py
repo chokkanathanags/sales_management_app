@@ -280,6 +280,7 @@ class GoldInventoryTransfer(models.Model):
     cost = fields.Float(string='Transfer Cost')
     notes = fields.Text(string='Notes')
     approved_by = fields.Char(string='Approved By')
+    logistics_id = fields.Many2one('gold.logistics', string='Shipment Tracking', readonly=True)
 
     @api.onchange('inventory_id')
     def _onchange_inventory_id(self):
@@ -288,6 +289,12 @@ class GoldInventoryTransfer(models.Model):
 
     def action_approve(self):
         for rec in self:
+            if not rec.inventory_id:
+                raise ValidationError("No inventory item selected for transfer.")
+            
+            if rec.quantity > rec.inventory_id.quantity:
+                raise ValidationError(f"Insufficient quantity in stock. Available: {rec.inventory_id.quantity}")
+
             rec.write({
                 'state': 'approved',
                 'approved_by': self.env.user.name
@@ -295,10 +302,40 @@ class GoldInventoryTransfer(models.Model):
 
     def action_transit(self):
         for rec in self:
-            rec.write({
+            if rec.state != 'approved':
+                continue
+            
+            # Move from quantity to qty_in_transit
+            if rec.inventory_id.quantity < rec.quantity:
+                 raise ValidationError(f"Insufficient quantity in stock for transfer. Available: {rec.inventory_id.quantity}")
+            
+            rec.inventory_id.write({
+                'quantity': rec.inventory_id.quantity - rec.quantity,
+                'qty_in_transit': rec.inventory_id.qty_in_transit + rec.quantity,
+                # Clear state if it's now entirely in transit? Usually better to keep as is.
+            })
+
+            vals = {
                 'state': 'in_transit',
                 'transfer_date': fields.Datetime.now()
-            })
+            }
+            # Auto-create/Update Logistics record
+            if not rec.logistics_id:
+                log_vals = {
+                    'transfer_id': rec.id,
+                    'carrier': 'own_fleet',
+                    'status': 'in_transit', # Set to in_transit immediately if starting transit
+                    'shipment_type': 'forward',
+                    'from_address': rec.from_location,
+                    'to_address': rec.to_location,
+                }
+                log_rec = self.env['gold.logistics'].create(log_vals)
+                vals['logistics_id'] = log_rec.id
+            else:
+                if rec.logistics_id.status == 'label_created':
+                    rec.logistics_id.write({'status': 'in_transit'})
+            
+            rec.write(vals)
 
     def action_done(self):
         for rec in self:
@@ -308,34 +345,65 @@ class GoldInventoryTransfer(models.Model):
             if not rec.inventory_id:
                 raise ValidationError("No inventory item selected for transfer.")
             
-            if rec.quantity > rec.inventory_id.quantity:
-                raise ValidationError(f"Insufficient quantity in stock. Available: {rec.inventory_id.quantity}")
-
-            # If partial transfer, split the record
-            if rec.quantity < rec.inventory_id.quantity:
-                # Create a new record for the destination
-                new_inv = rec.inventory_id.copy({
+            # If it was a full transfer of the remaining stock of that item:
+            if rec.inventory_id.quantity == 0 and rec.inventory_id.qty_in_transit == rec.quantity:
+                rec.inventory_id.write({
+                    'store_location': rec.to_location,
                     'quantity': rec.quantity,
+                    'qty_in_transit': 0,
+                    'state': 'available'
+                })
+            else:
+                # Partial transfer or item still has other stock:
+                # Create a new record for the destination
+                rec.inventory_id.copy({
+                    'quantity': rec.quantity,
+                    'qty_in_transit': 0,
                     'store_location': rec.to_location,
                     'state': 'available',
-                    'name': f"{rec.inventory_id.name} (Moved)",
                     'sku': f"{rec.inventory_id.sku}-T{fields.Datetime.now().strftime('%M%S')}",
                     'serial_number': f"{rec.inventory_id.serial_number}-T{fields.Datetime.now().strftime('%M%S')}",
                 })
-                # Subtract from original
-                rec.inventory_id.write({'quantity': rec.inventory_id.quantity - rec.quantity})
-            else:
-                # Full transfer: Just update the location
-                rec.inventory_id.write({'store_location': rec.to_location})
+                # Decrement qty_in_transit from original
+                rec.inventory_id.write({'qty_in_transit': rec.inventory_id.qty_in_transit - rec.quantity})
 
             rec.write({
                 'state': 'done',
                 'actual_arrival': fields.Datetime.now()
             })
+            # Sync with Logistics
+            if rec.logistics_id and rec.logistics_id.status not in ('delivered', 'delivery_failed'):
+                rec.logistics_id.write({
+                    'status': 'delivered',
+                    'actual_delivery': fields.Datetime.now()
+                })
+
+    def action_view_logistics(self):
+        self.ensure_one()
+        if not self.logistics_id:
+            return True
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Shipment Tracking',
+            'res_model': 'gold.logistics',
+            'res_id': self.logistics_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
 
     def action_cancel(self):
         for rec in self:
+            if rec.state == 'in_transit':
+                # Restore quantity from in_transit
+                rec.inventory_id.write({
+                    'quantity': rec.inventory_id.quantity + rec.quantity,
+                    'qty_in_transit': rec.inventory_id.qty_in_transit - rec.quantity,
+                })
+            
             rec.state = 'cancelled'
+            # Sync with Logistics
+            if rec.logistics_id:
+                rec.logistics_id.write({'status': 'delivery_failed'})
 
     @api.model_create_multi
     def create(self, vals_list):

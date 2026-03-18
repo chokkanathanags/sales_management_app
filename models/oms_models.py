@@ -11,7 +11,32 @@ class GoldPurchase(models.Model):
     name = fields.Char(string='Order Reference', copy=False, index=True, readonly=True)
     partner_id = fields.Many2one('res.partner', string='Customer', required=True)
     customer_id = fields.Many2one('gold.customer', string='Gold Customer', required=True)
+    customer_segment_code = fields.Char(related='customer_id.segment_code', string='Customer Segment', readonly=True, store=True)
+    pricelist_id = fields.Many2one('gold.pricelist', string='Pricelist', help="Determines the rates and discounts for this order.")
     active = fields.Boolean(string='Active', default=True)
+
+    @api.onchange('customer_id', 'order_source')
+    def _onchange_customer_source_segment(self):
+        """Auto-calculate the best pricelist based on segment and channel"""
+        if self.customer_id:
+            domain = [
+                ('channel', 'in', [self.order_source, 'all']),
+                '|',
+                ('segment_id', '=', self.customer_id.segment_id.id),
+                ('segment_id', '=', False)
+            ]
+            
+            pricelist = self.env['gold.pricelist'].search(domain, order='priority asc', limit=1)
+            if pricelist:
+                self.pricelist_id = pricelist.id
+
+    @api.onchange('pricelist_id')
+    def _onchange_pricelist_id(self):
+        """When pricelist changes, force all lines to re-fetch their rates"""
+        if self.pricelist_id:
+            for line in self.order_line_ids:
+                line._onchange_inventory_id()
+            self._compute_totals()
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -380,7 +405,7 @@ class GoldPurchase(models.Model):
                 raise ValidationError("The total value of the order must be greater than zero to confirm. Please ensure items have prices and weights.")
 
             rec.write({'state': 'confirmed', 'confirmation_date': fields.Datetime.now()})
-            
+
             # ERP Interconnection: Reserve Inventory and Create Payment
             for line in rec.order_line_ids:
                 if line.inventory_id:
@@ -416,6 +441,15 @@ class GoldPurchase(models.Model):
                     coupon.write({'times_used': coupon.times_used + 1})
                     # Recompute state if exhausted
                     coupon._compute_state()
+
+    def action_refresh_rates(self):
+        """Manually trigger a re-fetch of all rates for order lines"""
+        for rec in self:
+            if rec.state != 'draft':
+                raise ValidationError("Rates can only be refreshed in Draft state.")
+            for line in rec.order_line_ids:
+                line._onchange_inventory_id()
+            rec._compute_totals()
 
     def action_quality_check(self):
         for rec in self:
@@ -577,19 +611,10 @@ class GoldPurchaseLine(models.Model):
             self.karat = inv.karat
             self.gross_weight = inv.gross_weight
             self.net_weight = inv.net_weight
-            self.making_charge = inv.making_charge
-            self.stone_cost = inv.stone_cost
-            self.rate_id = inv.rate_id
-            
-            warning_msg = ""
-            if not inv.karat:
-                warning_msg += "Karat is missing. "
-            if inv.net_weight <= 0:
-                warning_msg += "Net Weight is 0. "
-                
-            # If rate_id is not set on inventory, try to find the latest active rate for the karat
-            if not self.rate_id and inv.karat:
-                # Robust Karat Mapping (Inventory Label -> Pricing Code)
+            # PRIORITY RATE LOOKUP
+            # 1. First, search for a Karat-specific rate within the Order's selective Pricelist
+            pricelist_rate = False
+            if inv.karat and self.order_id.pricelist_id:
                 karat_map = {
                     '24k': ['999', '24k', '24K'],
                     '22k': ['916', '22k', '22K'],
@@ -598,13 +623,24 @@ class GoldPurchaseLine(models.Model):
                 }
                 mapped_codes = karat_map.get(inv.karat.lower(), [inv.karat])
                 
-                latest_rate = self.env['gold.rate'].search([
+                pricelist_rate = self.env['gold.rate'].search([
+                    ('pricelist_id', '=', self.order_id.pricelist_id.id),
                     ('karat', 'in', mapped_codes),
                     ('state', '=', 'active')
                 ], order='effective_date desc', limit=1)
-                
-                if latest_rate:
-                    self.rate_id = latest_rate
+
+            # 2. Assignment & Propagation
+            if pricelist_rate:
+                self.rate_id = pricelist_rate
+                # Propagate Making Charges from the VIP Rate if defined
+                if pricelist_rate.making_charge_fixed > 0:
+                    self.making_charge = pricelist_rate.making_charge_fixed
+            else:
+                # Fallback to Inventory Default
+                self.rate_id = inv.rate_id
+                self.making_charge = inv.making_charge
+
+            self.stone_cost = inv.stone_cost
 
     @api.constrains('quantity')
     def _check_quantity(self):

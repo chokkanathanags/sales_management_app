@@ -130,7 +130,7 @@
                 <field name="name"/>
                 <field name="code"/>
                 <field name="channel"/>
-                <field name="customer_segment"/>
+                <field name="segment_id"/>
                 <field name="priority"/>
                 <field name="start_date"/>
                 <field name="end_date"/>
@@ -154,7 +154,7 @@
                             <field name="active"/>
                         </group>
                         <group string="Applicability">
-                            <field name="customer_segment" placeholder="e.g. VIP, Wholesale, Retail"/>
+                            <field name="segment_id" options="{'no_create': True}"/>
                             <field name="region" placeholder="e.g. South India, GCC"/>
                             <field name="start_date" placeholder="Effective From"/>
                             <field name="end_date" placeholder="Valid Until"/>
@@ -181,7 +181,7 @@
             <search string="Search Price Lists">
                 <field name="name"/>
                 <field name="channel"/>
-                <field name="customer_segment"/>
+                <field name="segment_id"/>
                 <group expand="0" string="Group By">
                     <filter name="group_by_channel" string="Channel" context="{'group_by': 'channel'}"/>
                 </group>
@@ -241,4 +241,7 @@
         <field name="limit">20</field>
     </record>
 
+    <menuitem id="menu_gold_pricing" name="Live Gold Rates" parent="menu_gold_pricing_root" action="action_gold_rate" sequence="10"/>
+    <menuitem id="menu_gold_pricelist" name="Price Lists" parent="menu_gold_pricing_root" action="action_gold_pricelist" sequence="20"/>
+    <menuitem id="menu_gold_price_history" name="Price History" parent="menu_gold_pricing_root" action="action_gold_price_history" sequence="30"/>
 </odoo>

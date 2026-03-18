@@ -150,7 +150,7 @@ class GoldPricelist(models.Model):
         ('all', 'All Channels'),
     ], string='Channel', default='all')
 
-    customer_segment = fields.Char(string='Customer Segment')
+    segment_id = fields.Many2one('gold.segment', string='Customer Segment')
     region = fields.Char(string='Region')
 
     start_date = fields.Date(string='Valid From')

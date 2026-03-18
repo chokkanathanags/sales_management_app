@@ -135,7 +135,7 @@
                             <field name="applicable_channel"/>
                             <field name="applicable_payment_method"
                                    invisible="promotion_type != 'payment_method'"/>
-                            <field name="customer_segment"/>
+                            <field name="segment_id" options="{'no_create': True}"/>
                             <field name="applicable_product_ids"/>
                             <field name="exclusion_product_ids"/>
                         </group>

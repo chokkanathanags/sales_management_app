@@ -275,6 +275,10 @@
                 <field name="from_location"/>
                 <field name="to_location"/>
                 <field name="quantity"/>
+                <field name="logistics_id" string="Shipment status" widget="badge" 
+                       decoration-info="logistics_id != False" 
+                       decoration-success="state == 'done'"
+                       decoration-muted="not logistics_id"/>
                 <field name="state" widget="badge"/>
                 <field name="transfer_date"/>
             </tree>
@@ -287,13 +291,21 @@
         <field name="arch" type="xml">
             <form string="Stock Transfer">
                 <header>
-                    <button name="action_approve" string="Approve" type="object" class="btn-primary" invisible="state != 'draft'"/>
-                    <button name="action_transit" string="Mark In Transit" type="object" class="btn-info" invisible="state != 'approved'"/>
-                    <button name="action_done" string="Confirm Arrival" type="object" class="btn-success" invisible="state != 'in_transit'"/>
-                    <button name="action_cancel" string="Cancel" type="object" invisible="state in ['done', 'cancelled']"/>
+                    <button name="action_approve" string="1. Approve Transfer" type="object" class="btn-primary" invisible="state != 'draft'" help="Verifies item availability and locks the transfer details."/>
+                    <button name="action_transit" string="2. Dispatch Shipment" type="object" class="btn-primary" invisible="state != 'approved'" help="Moves items from stock to 'In Transit' bucket and creates tracking."/>
+                    <button name="action_done" string="3. Receive Items" type="object" class="btn-success" invisible="state != 'in_transit'" help="Finalizes the transfer and updates the new location's stock."/>
+                    <button name="action_cancel" string="Cancel Transfer" type="object" class="btn-secondary" invisible="state in ['done', 'cancelled']"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,approved,in_transit,done"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_logistics" type="object" class="oe_stat_button" icon="fa-truck" invisible="logistics_id == False">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Shipment</span>
+                            </div>
+                        </button>
+                    </div>
+                    <field name="logistics_id" invisible="1"/>
                     <div class="oe_title">
                         <label for="name" string="Transfer Reference"/>
                         <h1><field name="name" readonly="1"/></h1>
@@ -304,11 +316,11 @@
                             <field name="quantity"/>
                         </group>
                         <group string="Locations &amp; Dates">
-                            <field name="from_location"/>
-                            <field name="to_location"/>
-                            <field name="transfer_date" readonly="1"/>
-                            <field name="estimated_arrival"/>
-                            <field name="actual_arrival" readonly="1"/>
+                            <field name="from_location" help="Current location of the jewelry item."/>
+                            <field name="to_location" help="Target destination for this transfer."/>
+                            <field name="transfer_date" readonly="1" help="Date when the items left the source location."/>
+                            <field name="estimated_arrival" help="When the items are expected to reach the destination."/>
+                            <field name="actual_arrival" readonly="1" help="System recorded time of receipt."/>
                         </group>
                     </group>
                     <group>
@@ -353,4 +365,7 @@
         <field name="limit">20</field>
     </record>
 
+    <menuitem id="menu_gold_inventory" name="Jewelry Items" parent="menu_gold_inventory_root" action="action_gold_inventory" sequence="10"/>
+    <menuitem id="menu_gold_category" name="Categories" parent="menu_gold_inventory_root" action="action_gold_category" sequence="15"/>
+    <menuitem id="menu_gold_inventory_transfer" name="Stock Transfers" parent="menu_gold_inventory_root" action="action_gold_inventory_transfer" sequence="20"/>
 </odoo>

@@ -25,7 +25,7 @@
             <field name="name">Rajesh Kumar</field>
             <field name="mobile">987854613215</field>
             <field name="email">rajesh.kumar@vip.com</field>
-            <field name="segment">vip</field>
+            <!-- segment will be computed from segment_id -->
             <field name="state">active</field>
         </record>
 
