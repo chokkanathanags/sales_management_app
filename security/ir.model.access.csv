@@ -32,3 +32,12 @@ access_gold_analytics_dashboard_mgr,gold.analytics.dashboard.mgr,model_gold_anal
 access_gold_analytics_dashboard_sp,gold.analytics.dashboard.sp,model_gold_analytics_dashboard,sales_management_app.group_gold_salesperson,1,0,0,0
 access_gold_segment_mgr,gold.segment.mgr,model_gold_segment,sales_management_app.group_gold_manager,1,1,1,1
 access_gold_segment_sp,gold.segment.sp,model_gold_segment,sales_management_app.group_gold_salesperson,1,0,0,0
+access_gold_inventory_mgr_full,gold.inventory.mgr.full,model_gold_inventory,sales_management_app.group_gold_manager,1,1,1,1
+access_gold_inventory_transfer_mgr_full,gold.inventory.transfer.mgr.full,model_gold_inventory_transfer,sales_management_app.group_gold_manager,1,1,1,1
+access_gold_inventory_reservation_mgr_full,gold.inventory.reservation.mgr.full,model_gold_inventory_reservation,sales_management_app.group_gold_manager,1,1,1,1
+access_gold_purchase_mgr_full,gold.purchase.mgr.full,model_gold_purchase,sales_management_app.group_gold_manager,1,1,1,1
+access_gold_purchase_line_mgr_full,gold.purchase.line.mgr.full,model_gold_purchase_line,sales_management_app.group_gold_manager,1,1,1,1
+access_gold_payment_mgr_full,gold.payment.mgr.full,model_gold_payment,sales_management_app.group_gold_manager,1,1,1,1
+access_gold_logistics_mgr_full,gold.logistics.mgr.full,model_gold_logistics,sales_management_app.group_gold_manager,1,1,1,1
+access_gold_returns_mgr_full,gold.returns.mgr.full,model_gold_returns,sales_management_app.group_gold_manager,1,1,1,1
+access_gold_segment_mgr_full,gold.segment.mgr.full,model_gold_segment,sales_management_app.group_gold_manager,1,1,1,1

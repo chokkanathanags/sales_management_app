@@ -29,7 +29,7 @@
         <field name="name">gold.logistics.form</field>
         <field name="model">gold.logistics</field>
         <field name="arch" type="xml">
-            <form string="Shipment">
+            <form string="Shipment" create="0">
                 <header>
                     <button name="action_schedule_pickup" string="Schedule Pickup" type="object" class="btn-primary" invisible="status != 'label_created'"/>
                     <button name="action_picked_up" string="Picked Up" type="object" class="btn-primary" invisible="status != 'pickup_scheduled'"/>
@@ -224,7 +224,7 @@
         <field name="res_model">gold.logistics</field>
         <field name="view_mode">tree,kanban,calendar,graph,form</field>
         <field name="limit">20</field>
-        <field name="context">{'search_default_in_transit': 1}</field>
+        <field name="context">{'search_default_in_transit': 1, 'no_create': True}</field>
     </record>
 
     <menuitem id="menu_gold_log_root" name="Logistics" parent="menu_sales_management_root" sequence="70"/>

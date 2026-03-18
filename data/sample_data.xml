@@ -1,44 +1,93 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="0">
-        <!-- 1. Promotions & Coupons -->
+    <data noupdate="1">
+        <!-- 1. Customer Segments / Tiers -->
+        <record id="segment_silver" model="gold.segment">
+            <field name="name">Silver Tier</field>
+            <field name="code">silver</field>
+            <field name="sequence">30</field>
+            <field name="min_lifetime_value">50000.0</field>
+            <field name="description">Standard loyal customers with basic benefits.</field>
+            <field name="color">1</field>
+        </record>
+
+        <record id="segment_gold" model="gold.segment">
+            <field name="name">Gold Tier</field>
+            <field name="code">gold</field>
+            <field name="sequence">20</field>
+            <field name="min_lifetime_value">100000.0</field>
+            <field name="description">Premium customers with priority service and birthday discounts.</field>
+            <field name="color">4</field>
+        </record>
+
+        <record id="segment_diamond" model="gold.segment">
+            <field name="name">Diamond (VIP)</field>
+            <field name="code">diamond</field>
+            <field name="sequence">10</field>
+            <field name="min_lifetime_value">500000.0</field>
+            <field name="description">Elite customers with personalized concierge service and exclusive previews.</field>
+            <field name="color">2</field>
+        </record>
+
+        <!-- 2. Promotions & Coupons -->
         <record id="promo_making_waiver" model="gold.promotions">
-            <field name="name">Akshaya Tritiya - 50% Off Making</field>
-            <field name="code">AKSHAYA50</field>
+            <field name="name">Festival Special - 50% Off Making</field>
+            <field name="code">FESTIVAL50</field>
             <field name="promotion_type">percentage</field>
             <field name="discount_pct">50.0</field>
             <field name="state">active</field>
-            <field name="start_date" eval="(datetime.now() - relativedelta(days=5)).strftime('%Y-%m-%d %H:%M:%S')"/>
-            <field name="end_date" eval="(datetime.now() + relativedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')"/>
-            <field name="description">Celebrate the festival with half-off making charges on all gold jewelry.</field>
+            <field name="start_date" eval="(datetime.now() - relativedelta(days=10)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="end_date" eval="(datetime.now() + relativedelta(days=20)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="description">Celebrate with half-off making charges on all gold jewelry.</field>
         </record>
 
-        <record id="coupon_akshaya_1" model="gold.coupon">
-            <field name="name">FESTIVAL2024</field>
+        <record id="coupon_welcome_1" model="gold.coupon">
+            <field name="name">WELCOME2024</field>
             <field name="promotion_id" ref="promo_making_waiver"/>
-            <field name="max_uses">100</field>
+            <field name="max_uses">500</field>
             <field name="state">active</field>
         </record>
 
-        <!-- 2. Customers (Ensuring partner linkage) -->
+        <!-- 3. Customers -->
+        <record id="customer_silver_1" model="gold.customer">
+            <field name="name">Amit Sharma</field>
+            <field name="mobile">9876543210</field>
+            <field name="email">amit.sharma@example.com</field>
+            <field name="segment_id" ref="segment_silver"/>
+            <field name="loyalty_points">650.0</field>
+            <field name="state">active</field>
+            <field name="shipping_address">Flat 402, Sky Residency, Mumbai, MH - 400001</field>
+        </record>
+
+        <record id="customer_gold_1" model="gold.customer">
+            <field name="name">Priyanka Verma</field>
+            <field name="mobile">9887766554</field>
+            <field name="email">priyanka.v@example.com</field>
+            <field name="segment_id" ref="segment_gold"/>
+            <field name="loyalty_points">1500.0</field>
+            <field name="state">active</field>
+            <field name="shipping_address">Villa 12, Palm Meadows, Bangalore, KA - 560066</field>
+        </record>
+
         <record id="customer_vip_1" model="gold.customer">
-            <field name="name">Rajesh Kumar</field>
-            <field name="mobile">987854613215</field>
-            <field name="email">rajesh.kumar@vip.com</field>
-            <!-- segment will be computed from segment_id -->
-            <field name="state">active</field>
+            <field name="name">Rajesh Kumar (Diamond)</field>
+            <field name="mobile">9900887766</field>
+            <field name="email">rajesh.k@diamond.com</field>
+            <field name="segment_id" ref="segment_diamond"/>
+            <field name="loyalty_points">7500.0</field>
+            <field name="state">vip</field>
+            <field name="shipping_address">Penthouse, Pearl Towers, Delhi, DL - 110001</field>
         </record>
 
-        <!-- 3. Metal Rates -->
+        <!-- 4. Metal Rates -->
         <record id="rate_gold_22k_demo" model="gold.rate">
             <field name="name">Standard 22K (916) - Mumbai</field>
             <field name="metal_type">gold</field>
             <field name="karat">916</field>
-            <field name="price_per_gram">5950.0</field>
+            <field name="price_per_gram">6150.0</field>
             <field name="effective_date" eval="datetime.now().strftime('%Y-%m-%d %H:%M:%S')"/>
             <field name="state">active</field>
             <field name="making_charge_fixed">450.0</field>
-            <field name="making_charge_pct">10.0</field>
             <field name="wastage_pct">2.5</field>
         </record>
 
@@ -46,7 +95,7 @@
             <field name="name">Pure Gold 24K (999)</field>
             <field name="metal_type">gold</field>
             <field name="karat">999</field>
-            <field name="price_per_gram">6350.0</field>
+            <field name="price_per_gram">6650.0</field>
             <field name="effective_date" eval="datetime.now().strftime('%Y-%m-%d %H:%M:%S')"/>
             <field name="state">active</field>
             <field name="making_charge_fixed">200.0</field>
@@ -55,81 +104,207 @@
         <record id="rate_platinum_demo" model="gold.rate">
             <field name="name">Platinum Pure (950)</field>
             <field name="metal_type">platinum</field>
-            <field name="price_per_gram">3500.0</field>
+            <field name="price_per_gram">3800.0</field>
             <field name="state">active</field>
             <field name="making_charge_fixed">1200.0</field>
         </record>
 
-        <!-- 4. Inventory -->
-        <record id="inv_item_demo_necklace" model="gold.inventory">
-            <field name="name">Royal Temple Work Necklace</field>
-            <field name="sku">NCK-TEMP-916-01</field>
-            <field name="serial_number">SER-916-NCK-2024-001</field>
+        <!-- 5. Inventory Items (Different States and Locations) -->
+        <record id="inv_item_ring_gold_1" model="gold.inventory">
+            <field name="name">Handcrafted Gold Wedding Ring</field>
+            <field name="sku">RNG-G22-WR-001</field>
+            <field name="serial_number">SER-RNG-001</field>
             <field name="type">gold</field>
             <field name="karat">22k</field>
             <field name="category_id" ref="cat_gold_jewelry"/>
-            <field name="net_weight">32.450</field>
-            <field name="gross_weight">35.200</field>
+            <field name="net_weight">12.450</field>
+            <field name="gross_weight">12.500</field>
             <field name="rate_id" ref="rate_gold_22k_demo"/>
+            <field name="store_location">Store A - Display</field>
             <field name="state">available</field>
             <field name="quantity">1</field>
         </record>
 
-        <record id="inv_item_demo_ring" model="gold.inventory">
-            <field name="name">Classic Platinum Band</field>
-            <field name="sku">RNG-PLAT-001</field>
-            <field name="serial_number">SER-PLT-RNG-2024-005</field>
-            <field name="type">platinum</field>
-            <field name="category_id" ref="cat_platinum_jewelry"/>
-            <field name="net_weight">6.200</field>
-            <field name="gross_weight">6.200</field>
-            <field name="rate_id" ref="rate_platinum_demo"/>
+        <record id="inv_item_necklace_diamond_1" model="gold.inventory">
+            <field name="name">Bridal Diamond Necklace Set</field>
+            <field name="sku">NCK-DMD-BR-005</field>
+            <field name="serial_number">SER-NCK-DMD-005</field>
+            <field name="type">diamond</field>
+            <field name="category_id" ref="cat_diamond_jewelry"/>
+            <field name="net_weight">45.200</field>
+            <field name="gross_weight">52.800</field>
+            <field name="stone_cost">250000.0</field>
+            <field name="store_location">Main Warehouse - Safe 01</field>
             <field name="state">available</field>
-            <field name="quantity">5</field>
+            <field name="quantity">1</field>
         </record>
 
-        <record id="inv_item_demo_coin" model="gold.inventory">
-            <field name="name">Investment Gold Coin 24K (10g)</field>
+        <record id="inv_item_bangle_gold_2" model="gold.inventory">
+            <field name="name">Traditional Antique Bangle</field>
+            <field name="sku">BGL-G22-ANT-002</field>
+            <field name="serial_number">SER-BGL-552</field>
+            <field name="type">gold</field>
+            <field name="karat">22k</field>
+            <field name="category_id" ref="cat_gold_jewelry"/>
+            <field name="net_weight">28.000</field>
+            <field name="gross_weight">28.000</field>
+            <field name="rate_id" ref="rate_gold_22k_demo"/>
+            <field name="store_location">Store B - Vault</field>
+            <field name="state">available</field>
+            <field name="quantity">2</field>
+        </record>
+
+        <record id="inv_item_gold_coin_24k_10g" model="gold.inventory">
+            <field name="name">Temple Work Gold Coin (10g)</field>
             <field name="sku">COIN-G24-10G</field>
-            <field name="serial_number">SER-G24-COIN-010</field>
+            <field name="serial_number">SER-COIN-010-01</field>
             <field name="type">gold</field>
             <field name="karat">24k</field>
             <field name="category_id" ref="cat_coins"/>
             <field name="net_weight">10.000</field>
             <field name="gross_weight">10.000</field>
             <field name="rate_id" ref="rate_gold_24k_demo"/>
+            <field name="store_location">Main Warehouse</field>
             <field name="state">available</field>
-            <field name="quantity">20</field>
+            <field name="quantity">50</field>
         </record>
 
-        <!-- 5. Sample Order (Delivered Flow) -->
-        <record id="order_demo_1" model="gold.purchase">
+        <!-- 6. Inventory Transfers -->
+        <record id="transfer_warehouse_to_store_a" model="gold.inventory.transfer">
+            <field name="inventory_id" ref="inv_item_gold_coin_24k_10g"/>
+            <field name="from_location">Main Warehouse</field>
+            <field name="to_location">Store A - Display</field>
+            <field name="quantity">10</field>
+            <field name="state">done</field>
+            <field name="transfer_date" eval="(datetime.now() - relativedelta(days=5)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="actual_arrival" eval="(datetime.now() - relativedelta(days=4)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+        <record id="transfer_transit_store_b" model="gold.inventory.transfer">
+            <field name="inventory_id" ref="inv_item_gold_coin_24k_10g"/>
+            <field name="from_location">Main Warehouse</field>
+            <field name="to_location">Store B - Vault</field>
+            <field name="quantity">5</field>
+            <field name="state">in_transit</field>
+            <field name="transfer_date" eval="(datetime.now() - relativedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+        <!-- 7. Orders (OMS Flow) -->
+        
+        <!-- Order 1: Delivered and Paid -->
+        <record id="order_delivered_1" model="gold.purchase">
             <field name="partner_id" ref="base.main_partner"/>
-            <field name="customer_id" ref="customer_vip_1"/>
+            <field name="customer_id" ref="customer_gold_1"/>
             <field name="state">delivered</field>
             <field name="payment_status">paid</field>
             <field name="payment_method">card_credit</field>
-            <field name="order_date" eval="(datetime.now() - relativedelta(days=2)).strftime('%Y-%m-%d %H:%M:%S')"/>
-            <field name="delivery_date" eval="(datetime.now() - relativedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="shipping_address">Villa 12, Palm Meadows, Bangalore, KA - 560066</field>
+            <field name="order_date" eval="(datetime.now() - relativedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="delivery_date" eval="(datetime.now() - relativedelta(days=4)).strftime('%Y-%m-%d %H:%M:%S')"/>
         </record>
 
-        <record id="order_line_demo_1" model="gold.purchase.line">
-            <field name="order_id" ref="order_demo_1"/>
-            <field name="inventory_id" ref="inv_item_demo_necklace"/>
-            <field name="name">Royal Temple Work Necklace</field>
+        <record id="order_line_delivered_1" model="gold.purchase.line">
+            <field name="order_id" ref="order_delivered_1"/>
+            <field name="inventory_id" ref="inv_item_ring_gold_1"/>
+            <field name="name">Handcrafted Gold Wedding Ring</field>
             <field name="quantity">1</field>
-            <field name="net_weight">32.450</field>
+            <field name="net_weight">12.450</field>
+            <field name="rate_id" ref="rate_gold_22k_demo"/>
+            <field name="making_charge">450.0</field>
+        </record>
+
+        <!-- Order 2: In Transit -->
+        <record id="order_transit_1" model="gold.purchase">
+            <field name="partner_id" ref="base.main_partner"/>
+            <field name="customer_id" ref="customer_vip_1"/>
+            <field name="state">in_transit</field>
+            <field name="payment_status">paid</field>
+            <field name="payment_method">card_credit</field>
+            <field name="shipping_address">Penthouse, Pearl Towers, Delhi, DL - 110001</field>
+            <field name="order_date" eval="(datetime.now() - relativedelta(days=2)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+        <record id="order_line_transit_1" model="gold.purchase.line">
+            <field name="order_id" ref="order_transit_1"/>
+            <field name="inventory_id" ref="inv_item_necklace_diamond_1"/>
+            <field name="name">Bridal Diamond Necklace Set</field>
+            <field name="quantity">1</field>
+            <field name="net_weight">45.200</field>
+            <field name="stone_cost">250000.0</field>
+        </record>
+
+        <!-- Order 3: Return Initiated -->
+        <record id="order_returned_1" model="gold.purchase">
+            <field name="partner_id" ref="base.main_partner"/>
+            <field name="customer_id" ref="customer_silver_1"/>
+            <field name="state">delivered</field>
+            <field name="payment_status">paid</field>
+            <field name="payment_method">cod</field>
+            <field name="order_date" eval="(datetime.now() - relativedelta(days=15)).strftime('%Y-%m-%d %H:%M:%S')"/>
+            <field name="delivery_date" eval="(datetime.now() - relativedelta(days=12)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+        <record id="order_line_returned_1" model="gold.purchase.line">
+            <field name="order_id" ref="order_returned_1"/>
+            <field name="inventory_id" ref="inv_item_bangle_gold_2"/>
+            <field name="name">Traditional Antique Bangle</field>
+            <field name="quantity">1</field>
+            <field name="net_weight">28.000</field>
             <field name="rate_id" ref="rate_gold_22k_demo"/>
         </record>
 
-        <!-- 6. Payment Record -->
-        <record id="payment_demo_1" model="gold.payment">
-            <field name="order_id" ref="order_demo_1"/>
-            <field name="customer_id" ref="customer_vip_1"/>
-            <field name="amount">215000.0</field> <!-- Estimated total -->
+        <!-- 8. Payments -->
+        <record id="payment_order_1" model="gold.payment">
+            <field name="order_id" ref="order_delivered_1"/>
+            <field name="amount">85000.0</field>
             <field name="payment_method">card_credit</field>
+            <field name="payment_gateway">razorpay</field>
+            <field name="transaction_id">TXN_888999555</field>
             <field name="state">success</field>
-            <field name="transaction_id">TXN_DEMO_999888</field>
+            <field name="payment_date" eval="(datetime.now() - relativedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+        <record id="payment_order_2" model="gold.payment">
+            <field name="order_id" ref="order_transit_1"/>
+            <field name="amount">350000.0</field>
+            <field name="payment_method">card_credit</field>
+            <field name="payment_gateway">stripe</field>
+            <field name="transaction_id">TXN_VIP_0001</field>
+            <field name="state">success</field>
+            <field name="payment_date" eval="(datetime.now() - relativedelta(days=2)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+        <!-- 9. Logistics (Tracking) -->
+        <record id="log_order_transit_1" model="gold.logistics">
+            <field name="order_id" ref="order_transit_1"/>
+            <field name="carrier">bluedart</field>
+            <field name="awb_number">AWB77889911</field>
+            <field name="status">in_transit</field>
+            <field name="to_address">Penthouse, Pearl Towers, Delhi, DL - 110001</field>
+            <field name="dispatch_date" eval="(datetime.now() - relativedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')"/>
+        </record>
+
+        <record id="log_transfer_transit_1" model="gold.logistics">
+            <field name="transfer_id" ref="transfer_transit_store_b"/>
+            <field name="carrier">own_fleet</field>
+            <field name="status">in_transit</field>
+            <field name="from_address">Main Warehouse</field>
+            <field name="to_address">Store B - Vault</field>
+        </record>
+
+        <!-- 10. Returns and RMA -->
+        <record id="return_order_3" model="gold.returns">
+            <field name="name">RMA/2024/00001</field>
+            <field name="order_id" ref="order_returned_1"/>
+            <field name="return_type">full</field>
+            <field name="reason">size_issue</field>
+            <field name="reason_notes">The bangle is too small for the customer's wrist.</field>
+            <field name="order_line_id" ref="order_line_returned_1"/>
+            <field name="original_qty">1.0</field>
+            <field name="returned_quantity">1.0</field>
+            <field name="state">received</field>
+            <field name="qc_status">pending</field>
+            <field name="initiation_date" eval="(datetime.now() - relativedelta(days=2)).strftime('%Y-%m-%d %H:%M:%S')"/>
         </record>
     </data>
 </odoo>
